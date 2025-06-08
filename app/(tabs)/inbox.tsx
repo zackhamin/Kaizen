@@ -1,10 +1,10 @@
+import { colors } from '@/constants/theme';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../constants/theme';
 
-export default function HomeScreen() {
+export default function InboxScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Home screen</Text>
+      <Text style={styles.text}>Inbox screen</Text>
     </View>
   );
 }
