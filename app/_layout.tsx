@@ -1,45 +1,105 @@
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { Text, TouchableOpacity } from 'react-native';
+import { colors } from '../constants/theme';
 
 export default function RootLayout() {
-  const segments = useSegments();
-  const router = useRouter();
-
   useEffect(() => {
-    // Check if user is authenticated
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const inAuthGroup = segments[0] === '(auth)';
-      
-      if (!session && !inAuthGroup) {
-        // Redirect to sign-in if not authenticated
-        router.replace('/sign-in');
-      } else if (session && inAuthGroup) {
-        // Redirect to home if authenticated
-        router.replace('/(tabs)');
-      }
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const inAuthGroup = segments[0] === '(auth)';
-      
-      if (!session && !inAuthGroup) {
-        router.replace('/sign-in');
-      } else if (session && inAuthGroup) {
-        router.replace('/(tabs)');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [segments]);
+    // Handle auth state changes if needed
+  }, []);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: colors.background.light,
+        },
+      }}
+    >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      
+      {/* Modal screens */}
+      <Stack.Screen 
+        name="create-post" 
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: true,
+          headerTitle: 'Create Post',
+          headerStyle: {
+            backgroundColor: colors.background.light,
+          },
+          headerTitleStyle: {
+            color: colors.text.primary.dark,
+            fontSize: 18,
+            fontWeight: '600',
+          },
+          headerLeft: () => null,
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ paddingRight: 16 }}
+            >
+              <Text style={{ 
+                color: colors.primary.main, 
+                fontSize: 16,
+                fontWeight: '500' 
+              }}>Cancel</Text>
+            </TouchableOpacity>
+          ),
+        }} 
+      />
+      
+      <Stack.Screen 
+        name="create-community" 
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: true,
+          headerTitle: 'Create Community',
+          headerStyle: {
+            backgroundColor: colors.background.light,
+          },
+          headerTitleStyle: {
+            color: colors.text.primary.dark,
+            fontSize: 18,
+            fontWeight: '600',
+          },
+          headerLeft: () => null,
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ paddingRight: 16 }}
+            >
+              <Text style={{ 
+                color: colors.primary.main, 
+                fontSize: 16,
+                fontWeight: '500' 
+              }}>Cancel</Text>
+            </TouchableOpacity>
+          ),
+        }} 
+      />
+      
+      <Stack.Screen 
+        name="settings" 
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: true,
+          headerTitle: 'Settings',
+          headerStyle: {
+            backgroundColor: colors.background.light,
+          },
+          headerTitleStyle: {
+            color: colors.text.primary.dark,
+            fontSize: 18,
+            fontWeight: '600',
+          },
+        }} 
+      />
     </Stack>
   );
 }

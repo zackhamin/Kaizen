@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { makeRedirectUri } from 'expo-auth-session';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import {
+  Alert,
   Dimensions,
   SafeAreaView,
   StyleSheet,
@@ -15,10 +15,13 @@ import {
 } from 'react-native';
 import { colors } from '../../constants/theme';
 import { supabase } from '../../lib/supabase';
+import { UserService } from '../../services/user.service';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const { width } = Dimensions.get('window');
+
+const userService = new UserService();
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -27,62 +30,115 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const handleSignIn = async (provider: 'google') => {
+  const handleSignIn = async (provider: 'google' | 'apple') => {
     try {
-      const redirectUrl = makeRedirectUri({
-        path: '/(auth)/sign-in',
-      });
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${process.env.EXPO_PUBLIC_APP_URL}/auth/callback`,
         },
       });
 
       if (error) throw error;
-      
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUrl
-        );
 
-        if (result.type === 'success') {
-          const { url } = result;
-          await supabase.auth.setSession({
-            access_token: url.split('#')[1].split('&')[0].split('=')[1],
-            refresh_token: url.split('#')[1].split('&')[1].split('=')[1],
-          });
-          router.replace('/(tabs)');
-        }
-      }
+      // Profile will be created automatically when getCurrentUser is called
     } catch (error) {
-      console.error(`Error signing in with ${provider}:`, error);
+      console.error('Error signing in:', error);
+      Alert.alert('Error', 'Failed to sign in. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEmailAuth = async () => {
+  const handleEmailAuth = async (isSignUp: boolean) => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('Attempting to', isSignUp ? 'sign up' : 'sign in', 'with email:', email);
+      
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        // Try sign up with minimal data first
+        console.log('Attempting sign up with minimal data...');
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {} // Empty data object
+          }
         });
-        if (error) throw error;
-        alert('Check your email for the confirmation link');
+
+        console.log('Sign up response:', {
+          success: !signUpError,
+          userId: signUpData?.user?.id,
+          error: signUpError ? {
+            message: signUpError.message,
+            status: signUpError.status,
+            code: signUpError.code
+          } : null
+        });
+
+        if (signUpError) throw signUpError;
+
+        if (signUpData?.user) {
+          console.log('Sign up successful, user created:', signUpData.user.id);
+          Alert.alert(
+            'Success',
+            'Please check your email for the confirmation link'
+          );
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        // Sign in flow remains the same
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
-        router.replace('/(tabs)');
+
+        console.log('Sign in response:', {
+          success: !signInError,
+          userId: signInData?.user?.id,
+          error: signInError ? {
+            message: signInError.message,
+            status: signInError.status,
+            code: signInError.code
+          } : null
+        });
+
+        if (signInError) throw signInError;
+
+        if (signInData?.user) {
+          console.log('Sign in successful, user:', signInData.user.id);
+          router.replace('/(tabs)');
+        }
       }
     } catch (error: any) {
-      console.error('Error with email auth:', error);
-      alert(error.message);
+      console.error('Detailed error in email auth:', {
+        message: error.message,
+        status: error.status,
+        name: error.name,
+        code: error.code,
+        stack: error.stack
+      });
+      
+      // Try to get more specific error information
+      if (error.status === 500) {
+        console.error('Database error details:', {
+          originalError: error.originalError,
+          details: error.details,
+          hint: error.hint
+        });
+      }
+      
+      Alert.alert(
+        'Error',
+        isSignUp 
+          ? `Failed to create account: ${error.message}`
+          : `Failed to sign in: ${error.message}`
+      );
     } finally {
       setLoading(false);
     }
@@ -157,7 +213,7 @@ export default function SignInScreen() {
             
             <TouchableOpacity
               style={[styles.button, styles.emailButton]}
-              onPress={handleEmailAuth}
+              onPress={() => handleEmailAuth(isSignUp)}
               disabled={loading}
             >
               <Text style={[styles.buttonText, styles.emailButtonText]}>
