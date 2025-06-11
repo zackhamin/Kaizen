@@ -8,26 +8,37 @@ import {
     FlatList,
     RefreshControl,
     SafeAreaView,
+    ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { colors } from '../../constants/theme';
 import { Community, CommunityService } from '../../services/community.service';
 
 const communityService = new CommunityService();
 
-// Category color mapping for visual distinction
-const categoryColors: { [key: string]: { bg: string; text: string } } = {
-  'chronic-pain': { bg: '#FEE2E2', text: '#DC2626' },
-  'mental-health': { bg: '#E0E7FF', text: '#4F46E5' },
-  'autoimmune': { bg: '#D1FAE5', text: '#059669' },
-  'cancer': { bg: '#FED7E2', text: '#BE185D' },
-  'neurological': { bg: '#E9D5FF', text: '#7C3AED' },
-  'default': { bg: colors.ui.lavender + '20', text: colors.primary.main },
+// Enhanced category configuration with icons and colors
+const categoryConfig: { [key: string]: { bg: string; text: string; icon: string; emoji: string } } = {
+  'chronic-pain': { bg: '#FEE2E2', text: '#DC2626', icon: 'medical', emoji: '🩹' },
+  'mental-health': { bg: '#E0E7FF', text: '#4F46E5', icon: 'brain', emoji: '🧠' },
+  'autoimmune': { bg: '#D1FAE5', text: '#059669', icon: 'heart', emoji: '🤝' },
+  'cancer': { bg: '#FED7E2', text: '#BE185D', icon: 'ribbon', emoji: '🎗️' },
+  'neurological': { bg: '#E9D5FF', text: '#7C3AED', icon: 'pulse', emoji: '⚡' },
+  'default': { bg: colors.ui.lavender + '20', text: colors.primary.main, icon: 'people', emoji: '👥' },
 };
+
+// Filter options
+const filters = [
+  'All',
+  'My Communities', 
+  'Recently Active',
+  'Popular',
+  'Mental Health',
+  'Chronic Pain',
+  'Autoimmune'
+];
 
 export default function CommunitiesScreen() {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -35,6 +46,7 @@ export default function CommunitiesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('All');
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
@@ -64,29 +76,12 @@ export default function CommunitiesScreen() {
     loadCommunities();
   };
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      setIsSearching(true);
-      try {
-        const { data, error } = await communityService.searchCommunities(query);
-        if (error) throw error;
-        setCommunities(data || []);
-      } catch (error) {
-        console.error('Error searching communities:', error);
-      }
-    } else {
-      setIsSearching(false);
-      loadCommunities();
-    }
-  };
-
-  const getCategoryStyle = (category: string) => {
-    return categoryColors[category] || categoryColors.default;
+  const getCategoryConfig = (category: string) => {
+    return categoryConfig[category] || categoryConfig.default;
   };
 
   const renderCommunity = ({ item, index }: { item: Community; index: number }) => {
-    const categoryStyle = getCategoryStyle(item.category);
+    const categoryStyle = getCategoryConfig(item.category);
     
     return (
       <Animated.View
@@ -108,38 +103,50 @@ export default function CommunitiesScreen() {
           onPress={() => router.push(`/community/${item.slug}`)}
           activeOpacity={0.7}
         >
-          <View style={styles.communityContent}>
-            <View style={styles.communityHeader}>
-              <View style={styles.communityTitleRow}>
-                <View style={[styles.communityIcon, { backgroundColor: categoryStyle.bg }]}>
-                  <Ionicons 
-                    name={item.is_private ? "lock-closed" : "people"} 
-                    size={20} 
-                    color={categoryStyle.text} 
-                  />
+          {/* Split Layout */}
+          <View style={styles.splitContainer}>
+            {/* Left side - Visual */}
+            <View style={styles.visualSection}>
+              <View style={[styles.iconContainer, { backgroundColor: categoryStyle.bg }]}>
+                <Text style={styles.categoryEmoji}>{categoryStyle.emoji}</Text>
+              </View>
+              <View style={[styles.progressBar, { backgroundColor: categoryStyle.text }]} />
+            </View>
+
+            {/* Right side - Content */}
+            <View style={styles.contentSection}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.communityName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                {item.is_private && (
+                  <View style={styles.privateBadge}>
+                    <Ionicons name="lock-closed" size={12} color="#D97706" />
+                  </View>
+                )}
+              </View>
+
+              <Text style={styles.communityDescription} numberOfLines={2}>
+                {item.description}
+              </Text>
+
+              <View style={styles.cardFooter}>
+                <View style={styles.memberInfo}>
+                  <Text style={styles.memberCount}>
+                    {item.member_count} members
+                  </Text>
+                  <Text style={styles.activeText}>
+                    Active recently
+                  </Text>
                 </View>
-                <View style={styles.communityInfo}>
-                  <Text style={styles.communityName}>{item.name}</Text>
-                  <View style={styles.communityMeta}>
-                    <Ionicons name="people-outline" size={14} color={colors.ui.muted.dark} />
-                    <Text style={styles.memberCount}>{item.member_count} members</Text>
+                
+                <View style={styles.statsContainer}>
+                  <View style={styles.statsBadge}>
+                    <Text style={styles.statsNumber}>24</Text>
+                    <Ionicons name="trending-up" size={12} color={colors.ui.muted.dark} />
                   </View>
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.ui.muted.light} />
-            </View>
-            
-            <Text style={styles.communityDescription} numberOfLines={2}>
-              {item.description}
-            </Text>
-            
-            <View style={styles.communityFooter}>
-              <View style={[styles.categoryTag, { backgroundColor: categoryStyle.bg }]}>
-                <Text style={[styles.categoryText, { color: categoryStyle.text }]}>
-                  {item.category.replace('-', ' ')}
-                </Text>
-              </View>
-              
             </View>
           </View>
         </TouchableOpacity>
@@ -158,33 +165,19 @@ export default function CommunitiesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Gradient Header */}
       <LinearGradient
-        colors={[colors.background.light, '#F9FAFB']}
-        style={styles.gradient}
+        colors={['#667eea', '#764ba2']}
+        style={styles.gradientHeader}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Communities</Text>
-          <Text style={styles.headerSubtitle}>Find your support network</Text>
-        </View>
+        <Text style={styles.headerTitle}>Communities</Text>
+        <Text style={styles.headerSubtitle}>Your health journey, together</Text>
+      </LinearGradient>
 
+      <View style={styles.contentContainer}>
         {/* Search Bar */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={colors.ui.muted.dark} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search communities..."
-              placeholderTextColor={colors.ui.muted.dark}
-              value={searchQuery}
-              onChangeText={handleSearch}
-            />
-            {searchQuery ? (
-              <TouchableOpacity onPress={() => handleSearch('')}>
-                <Ionicons name="close-circle" size={20} color={colors.ui.muted.dark} />
-              </TouchableOpacity>
-            ) : null}
-          </View>
+        {/* <View style={styles.searchSection}>
+         
           
           <TouchableOpacity 
             style={styles.createButton}
@@ -192,12 +185,39 @@ export default function CommunitiesScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={[colors.primary.main, '#6366F1']}
+              colors={['#667eea', '#764ba2']}
               style={styles.createButtonGradient}
             >
               <Ionicons name="add" size={24} color="white" />
             </LinearGradient>
           </TouchableOpacity>
+        </View> */}
+
+        {/* Tab-style Filters */}
+        <View style={styles.filtersSection}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersScrollContent}
+          >
+            {filters.map((filter) => (
+              <TouchableOpacity
+                key={filter}
+                style={[
+                  styles.filterTab,
+                  activeFilter === filter && styles.filterTabActive
+                ]}
+                onPress={() => setActiveFilter(filter)}
+              >
+                <Text style={[
+                  styles.filterTabText,
+                  activeFilter === filter && styles.filterTabTextActive
+                ]}>
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
         {/* Communities List */}
@@ -238,7 +258,7 @@ export default function CommunitiesScreen() {
             </View>
           }
         />
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -246,10 +266,28 @@ export default function CommunitiesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.light,
+    backgroundColor: 'white',
   },
-  gradient: {
+  gradientHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: 'white',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  contentContainer: {
     flex: 1,
+    backgroundColor: 'white',
   },
   loadingContainer: {
     flex: 1,
@@ -262,42 +300,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.ui.muted.dark,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.text.primary.dark,
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: colors.ui.muted.dark,
-    marginTop: 4,
-  },
   searchSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingVertical: 16,
     gap: 12,
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 48,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
     gap: 12,
   },
   searchInput: {
@@ -316,6 +333,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  filtersSection: {
+    paddingBottom: 16,
+    paddingTop: 16,
+  },
+  filtersScrollContent: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  filterTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.ui.muted.light,
+    backgroundColor: 'transparent',
+  },
+  filterTabActive: {
+    borderColor: colors.primary.main,
+    backgroundColor: colors.primary.main,
+  },
+  filterTabText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.ui.muted.dark,
+  },
+  filterTabTextActive: {
+    color: 'white',
+  },
   list: {
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -326,88 +371,103 @@ const styles = StyleSheet.create({
   communityCard: {
     backgroundColor: 'white',
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  communityContent: {
+  splitContainer: {
+    flexDirection: 'row',
     padding: 16,
   },
-  communityHeader: {
+  visualSection: {
+    marginRight: 16,
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryEmoji: {
+    fontSize: 24,
+  },
+  progressBar: {
+    width: 60,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.3,
+  },
+  contentSection: {
+    flex: 1,
+  },
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
-  communityTitleRow: {
+  communityName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text.primary.dark,
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    marginRight: 8,
   },
-  communityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  privateBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FEF3C7',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  communityInfo: {
-    flex: 1,
-  },
-  communityName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text.primary.dark,
-    marginBottom: 4,
-  },
-  communityMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  memberCount: {
-    fontSize: 14,
-    color: colors.ui.muted.dark,
-  },
-  separator: {
-    color: colors.ui.muted.light,
-    marginHorizontal: 4,
-  },
-  postCount: {
-    fontSize: 14,
-    color: colors.ui.muted.dark,
-  },
   communityDescription: {
-    fontSize: 14,
-    color: colors.text.primary.dark,
-    lineHeight: 20,
+    fontSize: 13,
+    color: colors.ui.muted.dark,
+    lineHeight: 18,
     marginBottom: 12,
   },
-  communityFooter: {
+  cardFooter: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  categoryTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+  memberInfo: {
+    flex: 1,
   },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  tags: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  tag: {
+  memberCount: {
     fontSize: 12,
     color: colors.ui.muted.dark,
+    marginBottom: 2,
+  },
+  activeText: {
+    fontSize: 11,
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  statsContainer: {
+    alignItems: 'flex-end',
+  },
+  statsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  statsNumber: {
+    fontSize: 11,
+    color: colors.ui.muted.dark,
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
