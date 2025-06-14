@@ -19,7 +19,7 @@ export interface Profile {
   };
   privacy_settings?: {
     show_location: boolean;
-    show_communities: boolean;
+    show_pods: boolean;
   };
   health_conditions?: string[];
   diagnosis_date?: string | null;
@@ -99,7 +99,7 @@ export class UserService extends BaseService {
         },
         privacy_settings: {
           show_location: true,
-          show_communities: true
+          show_pods: true
         },
         health_conditions: []
       };

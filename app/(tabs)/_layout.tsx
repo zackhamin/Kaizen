@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import { colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, router } from 'expo-router';
@@ -13,15 +12,13 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary.main,
-        tabBarInactiveTintColor: colors.ui.muted.light,
+        headerShown: false,
+        tabBarActiveTintColor: colors.accent.purple,
+        tabBarInactiveTintColor: colors.accent.peach,
         tabBarStyle: {
           height: Platform.OS === 'ios' ? 88 : 60,
           paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          paddingTop: 8,
-          borderTopWidth: 1,
-          borderTopColor: colors.ui.muted.light,
-          backgroundColor: colors.background.light,
+          backgroundColor: colors.accent.grey ,
           position: 'absolute',
           elevation: 8,
           shadowColor: '#000',
@@ -33,7 +30,6 @@ export default function TabLayout() {
           fontSize: 12,
           fontWeight: '500',
         },
-        header: () => <Header />,
       }}
     >
       <Tabs.Screen
@@ -47,9 +43,9 @@ export default function TabLayout() {
       />
       
       <Tabs.Screen
-        name="communities"
+        name="pods"
         options={{
-          title: 'Communities',
+          title: 'pods',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),

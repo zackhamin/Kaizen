@@ -1,6 +1,7 @@
 import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { Text, TouchableOpacity } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { colors } from '../constants/theme';
 
 export default function RootLayout() {
@@ -9,6 +10,7 @@ export default function RootLayout() {
   }, []);
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <Stack
       screenOptions={{
         headerShown: false,
@@ -101,5 +103,6 @@ export default function RootLayout() {
         }} 
       />
     </Stack>
-  );
+    </GestureHandlerRootView>
+    );
 }

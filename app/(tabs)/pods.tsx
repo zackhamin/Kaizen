@@ -3,16 +3,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    FlatList,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Animated,
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { colors } from '../../constants/theme';
 import { Community, CommunityService } from '../../services/community.service';
@@ -32,7 +32,7 @@ const categoryConfig: { [key: string]: { bg: string; text: string; icon: string;
 // Filter options
 const filters = [
   'All',
-  'My Communities', 
+  'My pods', 
   'Recently Active',
   'Popular',
   'Mental Health',
@@ -40,8 +40,8 @@ const filters = [
   'Autoimmune'
 ];
 
-export default function CommunitiesScreen() {
-  const [communities, setCommunities] = useState<Community[]>([]);
+export default function PodsScreen() {
+  const [pods, setpods] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,7 +50,7 @@ export default function CommunitiesScreen() {
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
-    loadCommunities();
+    loadpods();
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
@@ -58,13 +58,13 @@ export default function CommunitiesScreen() {
     }).start();
   }, []);
 
-  const loadCommunities = async () => {
+  const loadpods = async () => {
     try {
-      const { data, error } = await communityService.getAllCommunities();
+      const { data, error } = await communityService.getAllpods();
       if (error) throw error;
-      setCommunities(data || []);
+      setpods(data || []);
     } catch (error) {
-      console.error('Error loading communities:', error);
+      console.error('Error loading pods:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -73,7 +73,7 @@ export default function CommunitiesScreen() {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    loadCommunities();
+    loadpods();
   };
 
   const getCategoryConfig = (category: string) => {
@@ -158,115 +158,116 @@ export default function CommunitiesScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary.main} />
-        <Text style={styles.loadingText}>Finding communities for you...</Text>
+        <Text style={styles.loadingText}>Finding pods for you...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Gradient Header */}
-      <LinearGradient
-        colors={['#667eea', '#764ba2']}
-        style={styles.gradientHeader}
-      >
-        <Text style={styles.headerTitle}>Communities</Text>
-        <Text style={styles.headerSubtitle}>Your health journey, together</Text>
-      </LinearGradient>
 
-      <View style={styles.contentContainer}>
-        {/* Search Bar */}
-        {/* <View style={styles.searchSection}>
-         
-          
-          <TouchableOpacity 
-            style={styles.createButton}
-            onPress={() => router.push('/create-community')}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#667eea', '#764ba2']}
-              style={styles.createButtonGradient}
+      <SafeAreaView style={styles.container}>
+        {/* Gradient Header */}
+        <LinearGradient
+          colors={['#667eea', '#764ba2']}
+          style={styles.gradientHeader}
+        >
+          <Text style={styles.headerTitle}>pods</Text>
+          <Text style={styles.headerSubtitle}>Your health journey, together</Text>
+        </LinearGradient>
+
+        <View style={styles.contentContainer}>
+          {/* Search Bar */}
+          {/* <View style={styles.searchSection}>
+           
+            
+            <TouchableOpacity 
+              style={styles.createButton}
+              onPress={() => router.push('/create-community')}
+              activeOpacity={0.8}
             >
-              <Ionicons name="add" size={24} color="white" />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View> */}
-
-        {/* Tab-style Filters */}
-        <View style={styles.filtersSection}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filtersScrollContent}
-          >
-            {filters.map((filter) => (
-              <TouchableOpacity
-                key={filter}
-                style={[
-                  styles.filterTab,
-                  activeFilter === filter && styles.filterTabActive
-                ]}
-                onPress={() => setActiveFilter(filter)}
+              <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                style={styles.createButtonGradient}
               >
-                <Text style={[
-                  styles.filterTabText,
-                  activeFilter === filter && styles.filterTabTextActive
-                ]}>
-                  {filter}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+                <Ionicons name="add" size={24} color="white" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View> */}
 
-        {/* Communities List */}
-        <FlatList
-          data={communities}
-          renderItem={renderCommunity}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={colors.primary.main}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconWrapper}>
-                <Ionicons name="people-outline" size={48} color={colors.ui.muted.light} />
-              </View>
-              <Text style={styles.emptyTitle}>
-                {isSearching ? 'No communities found' : 'Discover Communities'}
-              </Text>
-              <Text style={styles.emptySubtitle}>
-                {isSearching 
-                  ? 'Try adjusting your search terms' 
-                  : 'Create the first community and start connecting with others'}
-              </Text>
-              {!isSearching && (
-                <TouchableOpacity 
-                  style={styles.createFirstButton}
-                  onPress={() => router.push('/create-community')}
+          {/* Tab-style Filters */}
+          <View style={styles.filtersSection}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filtersScrollContent}
+            >
+              {filters.map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    styles.filterTab,
+                    activeFilter === filter && styles.filterTabActive
+                  ]}
+                  onPress={() => setActiveFilter(filter)}
                 >
-                  <Text style={styles.createFirstButtonText}>Create Community</Text>
+                  <Text style={[
+                    styles.filterTabText,
+                    activeFilter === filter && styles.filterTabTextActive
+                  ]}>
+                    {filter}
+                  </Text>
                 </TouchableOpacity>
-              )}
-            </View>
-          }
-        />
-      </View>
-    </SafeAreaView>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* pods List */}
+          <FlatList
+            data={pods}
+            renderItem={renderCommunity}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.primary.main}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconWrapper}>
+                  <Ionicons name="people-outline" size={48} color={colors.ui.muted.light} />
+                </View>
+                <Text style={styles.emptyTitle}>
+                  {isSearching ? 'No pods found' : 'Discover pods'}
+                </Text>
+                <Text style={styles.emptySubtitle}>
+                  {isSearching 
+                    ? 'Try adjusting your search terms' 
+                    : 'Create the first community and start connecting with others'}
+                </Text>
+                {!isSearching && (
+                  <TouchableOpacity 
+                    style={styles.createFirstButton}
+                    onPress={() => router.push('/create-community')}
+                  >
+                    <Text style={styles.createFirstButtonText}>Create Community</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        </View>
+      </SafeAreaView>
+
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
   },
   gradientHeader: {
     paddingHorizontal: 20,
@@ -287,13 +288,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    backgroundColor: 'white',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background.light,
   },
   loadingText: {
     marginTop: 12,

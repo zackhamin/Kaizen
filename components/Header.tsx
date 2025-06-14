@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../constants/theme';
 
 export default function Header() {
@@ -17,7 +16,7 @@ export default function Header() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+
       <View style={styles.header}>
         <Text style={styles.logo}>Solace</Text>
         <View style={styles.rightButtons}>
@@ -29,14 +28,11 @@ export default function Header() {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.background.light,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -44,8 +40,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: colors.background.light,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ui.muted.light,
   },
   logo: {
     fontSize: 20,

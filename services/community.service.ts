@@ -23,15 +23,15 @@ export interface Community {
 
 export class CommunityService extends BaseService {
   private userService: UserService;
-  private table = 'communities';
+  private table = 'pods';
   private membersTable = 'community_members';
 
   constructor() {
-    super('communities');
+    super('pods');
     this.userService = new UserService();
   }
 
-  async getAllCommunities(page = 1, limit = 10) {
+  async getAllpods(page = 1, limit = 10) {
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
@@ -41,7 +41,7 @@ export class CommunityService extends BaseService {
     return { data: data as Community[], error };
   }
 
-  async searchCommunities(query: string) {
+  async searchpods(query: string) {
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
@@ -130,7 +130,7 @@ export class CommunityService extends BaseService {
     return { error };
   }
 
-  async getUserCommunities(): Promise<Community[]> {
+  async getUserpods(): Promise<Community[]> {
     try {
       // Get the current auth user
       const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -139,8 +139,8 @@ export class CommunityService extends BaseService {
         throw new Error('User not authenticated');
       }
 
-      // Get all communities where the user is a member
-      const { data: communities, error } = await supabase
+      // Get all pods where the user is a member
+      const { data: pods, error } = await supabase
         .from(this.table)
         .select(`
           *,
@@ -150,13 +150,13 @@ export class CommunityService extends BaseService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching user communities:', error);
+        console.error('Error fetching user pods:', error);
         throw error;
       }
 
-      return communities;
+      return pods;
     } catch (error) {
-      console.error('Error in getUserCommunities:', error);
+      console.error('Error in getUserpods:', error);
       throw error;
     }
   }

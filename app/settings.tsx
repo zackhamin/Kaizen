@@ -1,8 +1,8 @@
+import GradientBackground from '@/components/GradientBackground';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { User, UserService } from '../services/user.service';
 
@@ -40,7 +40,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'right', 'left']}>
+    <GradientBackground>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
           <Ionicons name="close" size={28} color="#333" />
@@ -67,22 +67,18 @@ export default function SettingsScreen() {
         <Ionicons name="log-out-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
         <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: 'white',
   },
   closeButton: {
     marginRight: 16,

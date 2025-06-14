@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -6,7 +5,6 @@ import { useState } from 'react';
 import {
   Alert,
   Dimensions,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -29,6 +27,8 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSignIn = async (provider: 'google' | 'apple') => {
     try {
@@ -149,50 +149,38 @@ export default function SignInScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={[colors.background.light, '#F3F4F6']}
+        colors={[colors.background.light, colors.primary.main]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
         style={styles.gradient}
       >
         <View style={styles.content}>
           {/* Logo/Icon Section */}
           <View style={styles.logoContainer}>
-            <View style={styles.iconWrapper}>
-              <Ionicons name="heart" size={40} color={colors.primary.main} />
-            </View>
-            <View style={styles.decorativeCircle} />
-            <View style={styles.decorativeCircleSmall} />
+            <Text style={styles.logoText}>Solace</Text>
           </View>
 
           {/* Header Text */}
           <View style={styles.headerContainer}>
             <Text style={styles.title}>Welcome to Solace</Text>
-            <Text style={styles.subtitle}>
-              Join a compassionate community where your health journey matters
-            </Text>
           </View>
 
-          {/* Feature Pills */}
-          <View style={styles.featuresContainer}>
-            <View style={styles.featurePill}>
-              <Ionicons name="people" size={16} color={colors.primary.main} />
-              <Text style={styles.featureText}>Supportive Community</Text>
-            </View>
-            <View style={styles.featurePill}>
-              <Ionicons name="shield-checkmark" size={16} color={colors.accent.green} />
-              <Text style={styles.featureText}>Safe Space</Text>
-            </View>
-            <View style={styles.featurePill}>
-              <Ionicons name="chatbubbles" size={16} color={colors.accent.blue} />
-              <Text style={styles.featureText}>Share & Connect</Text>
-            </View>
-          </View>
-
-          {/* Sign In Form */}
+          {/* Sign In/Register Form */}
           <View style={styles.form}>
+            {isSignUp && (
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor={colors.ui.muted.light}
+                value={fullName}
+                onChangeText={setFullName}
+              />
+            )}
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder="Email Address"
+              placeholderTextColor={colors.ui.muted.light}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -201,213 +189,128 @@ export default function SignInScreen() {
             <TextInput
               style={styles.input}
               placeholder="Password"
+              placeholderTextColor={colors.ui.muted.light}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
             />
+            {isSignUp && (
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor={colors.ui.muted.light}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+              />
+            )}
             {!isSignUp && (
               <TouchableOpacity onPress={handleForgotPassword}>
-                <Text style={styles.forgotPassword}>Forgot password?</Text>
+                <Text style={styles.forgotPassword}>Forgotten Password? Reset it here</Text>
               </TouchableOpacity>
             )}
-            
             <TouchableOpacity
-              style={[styles.button, styles.emailButton]}
+              style={styles.mainButton}
               onPress={() => handleEmailAuth(isSignUp)}
               disabled={loading}
             >
-              <Text style={[styles.buttonText, styles.emailButtonText]}>
-                {loading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Sign In'}
+              <Text style={styles.mainButtonText}>
+                {loading ? 'Please wait...' : isSignUp ? 'Register' : 'Login'}
               </Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.toggleButton}
               onPress={() => setIsSignUp(!isSignUp)}
             >
               <Text style={styles.toggleButtonText}>
-                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                {isSignUp ? 'Already have an account? Login' : "Don't have an account? Register"}
               </Text>
             </TouchableOpacity>
           </View>
-
-          {/* Sign In Buttons */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, styles.googleButton]}
-              onPress={() => handleSignIn('google')}
-            >
-              <Text style={styles.buttonText}>Continue with Google</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Privacy Notice */}
-          <Text style={styles.privacyText}>
-            Your privacy is our priority. We'll never share your health information.
-          </Text>
         </View>
       </LinearGradient>
-    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.light,
   },
   gradient: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 40,
+    width: '100%',
   },
   logoContainer: {
-    position: 'relative',
+    alignItems: 'center',
     marginBottom: 32,
-    alignItems: 'center',
   },
-  iconWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.background.light,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.primary.main,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-    zIndex: 3,
-  },
-  decorativeCircle: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.ui.lavender,
-    opacity: 0.2,
-    top: -10,
-    left: -10,
-    zIndex: 1,
-  },
-  decorativeCircleSmall: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.accent.blue,
-    opacity: 0.15,
-    top: 20,
-    right: -20,
-    zIndex: 2,
+  logoText: {
+    fontFamily: 'LeagueSpartan',
+    fontSize: 40,
+    color: colors.text.primary.dark,
+    marginBottom: 16,
   },
   headerContainer: {
     alignItems: 'center',
     marginBottom: 24,
   },
   title: {
-    fontSize: 34,
+    fontSize: 28,
     fontWeight: '700',
     color: colors.text.primary.dark,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
-  subtitle: {
-    fontSize: 16,
-    color: colors.ui.muted.dark,
-    textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 20,
-  },
-  featuresContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginBottom: 40,
-    gap: 8,
-  },
-  featurePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background.light,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.ui.muted.light,
-    gap: 6,
-  },
-  featureText: {
-    fontSize: 12,
-    color: colors.text.primary.dark,
-    fontWeight: '500',
-  },
   form: {
     width: '100%',
+    maxWidth: 340,
     marginBottom: 24,
+    alignSelf: 'center',
   },
   input: {
-    backgroundColor: colors.background.light,
-    borderWidth: 1,
-    borderColor: colors.ui.muted.light,
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     fontSize: 16,
-  },
-  forgotPassword: {
-    color: colors.primary.main,
-    fontSize: 14,
-    textAlign: 'right',
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    width: '100%',
-    gap: 16,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    width: '100%',
-  },
-  emailButton: {
-    backgroundColor: colors.primary.main,
-  },
-  googleButton: {
-    backgroundColor: colors.background.light,
     borderWidth: 1,
     borderColor: colors.ui.muted.light,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colors.text.primary.dark,
   },
-  emailButtonText: {
-    color: colors.background.light,
+  forgotPassword: {
+    color: colors.text.primary.dark,
+    fontSize: 14,
+    textAlign: 'right',
+    marginBottom: 16,
+  },
+  mainButton: {
+    backgroundColor: colors.text.primary.dark,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  mainButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   toggleButton: {
-    padding: 16,
+    padding: 8,
+    alignItems: 'center',
   },
   toggleButtonText: {
-    color: colors.primary.main,
+    color: colors.text.primary.dark,
     fontSize: 14,
     textAlign: 'center',
-  },
-  privacyText: {
-    fontSize: 12,
-    color: colors.ui.muted.dark,
-    textAlign: 'center',
-    paddingHorizontal: 40,
-    lineHeight: 18,
   },
 });

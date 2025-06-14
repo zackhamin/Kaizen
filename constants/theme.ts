@@ -1,19 +1,21 @@
 export const colors = {
   // Background colors
   background: {
-    light: '#F9FAFB',
-    dark: '#0F172A',
+    light: '#FFFCCD', // Pastel Peach
+    dark: '#131313', // Off-Black
   },
   
   // Primary colors
   primary: {
-    main: '#4F46E5', // Indigo
+    main: '#F1C2FA', // Light Purple
   },
   
-  // Accent colors
+  // Accent colors (optional, can be extended later)
   accent: {
-    green: '#22C55E',
-    blue: '#38BDF8',
+    peach: '#FFFCCD',
+    purple: '#F1C2FA',
+    grey: '#C0C0C0',
+    black: '#131313',
   },
   
   // Error colors
@@ -24,18 +26,18 @@ export const colors = {
   // Text colors
   text: {
     primary: {
-      light: '#E5E7EB',
-      dark: '#111827',
+      light: '#FFFCCD', // Pastel Peach
+      dark: '#131313', // Off-Black
     },
   },
   
   // UI colors
   ui: {
     muted: {
-      light: '#D1D5DB',
-      dark: '#9CA3AF',
+      light: '#C0C0C0', // Light Grey
+      dark: '#131313', // Off-Black (for dark muted)
     },
-    lavender: '#C4B5FD',
+    lavender: '#F1C2FA', // Light Purple
   },
 };
 
