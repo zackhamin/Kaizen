@@ -2,92 +2,21 @@ import { colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
-    Alert,
-    Linking,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Linking,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supportServices, youngPersonServices } from './support-services';
+import { SOSModalProps, SupportService } from './types';
 
-interface SupportService {
-  name: string;
-  phone: string;
-  hours: string;
-  description: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  urgent?: boolean;
-  specialty?: string;
-}
 
-interface SOSModalProps {
-  visible: boolean;
-  onClose: () => void;
-}
-
-const supportServices: SupportService[] = [
-  {
-    name: 'NHS 111 Mental Health',
-    phone: '111',
-    hours: '24/7',
-    description: 'Press option 2 for urgent mental health support',
-    icon: 'medical',
-    urgent: true,
-  },
-  {
-    name: 'Samaritans',
-    phone: '116 123',
-    hours: '24/7',
-    description: 'Free confidential emotional support for anyone',
-    icon: 'heart',
-    urgent: true,
-  },
-  {
-    name: 'Crisis Text Support',
-    phone: '85258',
-    hours: '24/7',
-    description: 'Text SHOUT for immediate crisis support',
-    icon: 'chatbubble',
-    specialty: 'Text Support',
-  },
-  {
-    name: 'Mind Support',
-    phone: '0300 102 1234',
-    hours: '9am-6pm, Mon-Fri',
-    description: 'Mental health information and support',
-    icon: 'information-circle',
-  },
-  {
-    name: 'CALM',
-    phone: '0800 58 58 58',
-    hours: '5pm-midnight daily',
-    description: 'Support for men facing mental health challenges',
-    icon: 'shield',
-  },
-  {
-    name: 'SANEline',
-    phone: '0300 304 7000',
-    hours: '4:30pm-10pm daily',
-    description: 'Mental health helpline and support',
-    icon: 'call',
-  },
-];
-
-const youngPersonServices: SupportService[] = [
-  {
-    name: 'Papyrus HOPELINEUK',
-    phone: '0800 068 4141',
-    hours: '24/7',
-    description: 'Support for under 35s with suicidal feelings',
-    icon: 'leaf',
-    specialty: 'Under 35s',
-  },
-];
-
-export default function SOSModal({ visible, onClose }: SOSModalProps) {
+function SOSModal({ visible, onClose }: SOSModalProps) {
   const handleCall = async (phone: string, serviceName: string) => {
     try {
       const phoneUrl = `tel:${phone}`;
@@ -358,3 +287,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export { SOSModal };

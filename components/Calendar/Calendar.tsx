@@ -1,42 +1,15 @@
+import { DAYS_SHORT, MONTHS } from '@/constants/components.constants';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
-
-interface CalendarProps {
-  selectedDate?: Date;
-  onDateChange?: (date: Date) => void;
-  minDate?: Date;
-  maxDate?: Date;
-  showMonthNavigation?: boolean;
-  size?: 'small' | 'medium' | 'large';
-  disabled?: boolean;
-  highlightToday?: boolean;
-  showSelectedDate?: boolean;
-}
-
-interface SizeConfig {
-  daySize: number;
-  fontSize: number;
-  headerFontSize: number;
-  padding: number;
-  spacing: number;
-}
-
-const AnimatedPressable = Animated.createAnimatedComponent(View);
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
-
-const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+import { CalendarProps, SizeConfig } from './types';
 
 export const StyledCalendar: React.FC<CalendarProps> = ({
   selectedDate,
@@ -51,7 +24,7 @@ export const StyledCalendar: React.FC<CalendarProps> = ({
 }) => {
   const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(selectedDate || null);
-  
+  const AnimatedPressable = Animated.createAnimatedComponent(View);
   // Size configurations
   const sizeConfig: Record<string, SizeConfig> = {
     small: { daySize: 28, fontSize: 12, headerFontSize: 14, padding: 15, spacing: 2 },

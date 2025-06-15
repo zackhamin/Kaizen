@@ -1,8 +1,5 @@
-import { StyledCalendar } from '@/components/Calendar';
-
+import { HorizontalCalendar } from '@/components';
 import GradientBackground from '@/components/GradientBackground';
-import { PainScaleCircles } from '@/components/ScaleCircles';
-import { PainScaleSlider } from '@/components/ScaleSlider';
 import { colors } from '@/constants/theme';
 import { StyleSheet, View } from 'react-native';
 
@@ -11,18 +8,20 @@ export default function HomeScreen() {
     <GradientBackground  showHeader={false}>
       <View style={styles.container}>
         <View style={styles.scaleContainer}> 
-          <View style={{marginBottom: 10}}>
+          <HorizontalCalendar onDateChange={(date) => {console.log('date changed', date)}} />
+          {/* <View style={{marginBottom: 10}}>
             <PainScaleSlider initialValue={5} onValueChange={(e: number) => {console.log('value changed', e)}} />
-          </View>
+          </View> */}
 
             {/* <PainScaleBar value={5} onValueChange={() => {}} /> */}
-
+{/* 
           <View style={{marginBottom: 0}}>
             <PainScaleCircles initialValue={5} onValueChange={() => {}} /> 
           </View>
         <View style={{marginBottom: 10}}>
+          <HorizontalCalendar  />
           <StyledCalendar />
-        </View>
+        </View> */}
       </View>
         </View>
     </GradientBackground>
@@ -40,7 +39,8 @@ const styles = StyleSheet.create({
   },
   scaleContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
   },
 });

@@ -1,5 +1,4 @@
-// components/types/PainScale.ts
-
+// Shared types for components
 export type PainLevel = 'No Pain' | 'Mild' | 'Moderate' | 'Severe' | 'Worst Pain';
 
 export interface PainScaleProps {

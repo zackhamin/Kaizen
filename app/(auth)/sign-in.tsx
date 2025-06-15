@@ -1,4 +1,5 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import GradientBackground from '@/components/GradientBackground';
+import { colors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { colors } from '../../constants/theme';
 import { supabase } from '../../lib/supabase';
 import { UserService } from '../../services/user.service';
 
@@ -149,21 +149,18 @@ export default function SignInScreen() {
   };
 
   return (
-      <LinearGradient
-        colors={[colors.background.light, colors.primary.main]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.gradient}
+      <GradientBackground
+        showHeader={false}
       >
         <View style={styles.content}>
           {/* Logo/Icon Section */}
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>Solace</Text>
+            <Text style={styles.logoText}>Terminus</Text>
           </View>
 
           {/* Header Text */}
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>Welcome to Solace</Text>
+            <Text style={styles.title}>Welcome to Terminus</Text>
           </View>
 
           {/* Sign In/Register Form */}
@@ -228,7 +225,7 @@ export default function SignInScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </GradientBackground>
   );
 }
 
@@ -255,7 +252,7 @@ const styles = StyleSheet.create({
   logoText: {
     fontFamily: 'LeagueSpartan',
     fontSize: 40,
-    color: colors.text.primary.dark,
+    color: colors.text.muted.dark,
     marginBottom: 16,
   },
   headerContainer: {
@@ -265,7 +262,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.text.primary.dark,
+    color: colors.text.muted.dark,
     marginBottom: 12,
     letterSpacing: -0.5,
   },

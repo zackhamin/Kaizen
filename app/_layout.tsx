@@ -23,36 +23,6 @@ export default function RootLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       
       {/* Modal screens */}
-      <Stack.Screen 
-        name="sos-page" 
-        options={{
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-          headerShown: true,
-          headerTitle: 'SOS',
-          headerStyle: {
-            backgroundColor: colors.background.light,
-          },
-          headerTitleStyle: {
-            color: colors.text.primary.dark,
-            fontSize: 18,
-            fontWeight: '600',
-          },
-          headerLeft: () => null,
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ paddingRight: 16 }}
-            >
-              <Text style={{ 
-                color: colors.primary.main, 
-                fontSize: 16,
-                fontWeight: '500' 
-              }}>Cancel</Text>
-            </TouchableOpacity>
-          ),
-        }} 
-      />
       
       <Stack.Screen 
         name="create-community" 

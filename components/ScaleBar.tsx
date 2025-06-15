@@ -1,4 +1,4 @@
-import { PainLevel, PainScaleProps } from '@/types/PainScale';
+import { PainLevel, PainScaleProps } from '@/types/components.types';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 

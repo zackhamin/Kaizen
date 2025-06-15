@@ -1,3 +1,5 @@
+// Add this to your existing theme.ts file
+
 export const colors = {
   background: {
     light: '#F5F7FA', // Cool neutral grey-white
@@ -59,6 +61,10 @@ export const colors = {
       light: '#718096', // Steel grey
       dark: '#718096', // Steel grey
     },
+    disabled: {
+      light: '#CBD5E0', // Very light grey (40% opacity feel)
+      dark: '#4A5568', // Darker grey for dark mode
+    },
   },
   
   // UI colors
@@ -76,6 +82,42 @@ export const colors = {
       dark: '#1A202C', // Very dark grey
     },
     focus: '#4299E1', // Bright blue for focus states
+    disabled: {
+      light: '#F7FAFC', // Very light grey background
+      dark: '#2D3748', // Dark grey background
+    },
+  },
+
+  // Calendar-specific colors
+  calendar: {
+    selected: {
+      light: '#2C5282', // primary.main
+      dark: '#4A90B8', // primary.light for better contrast on dark
+    },
+    cardBackground: {
+      light: '#FFFFFFF2', // ui.surface.light with 95% opacity
+      dark: '#2D3748E6', // ui.surface.dark with 90% opacity
+    },
+    indicator: {
+      default: '#2C5282', // primary.main
+      partial: '#D69E2E', // warning.main
+      complete: '#38A169', // success.main
+      mood: '#E53E3E', // error.main
+    },
+    disabled: {
+      background: {
+        light: '#F7FAFC', // Very muted background
+        dark: '#1A202C', // Very dark background
+      },
+      text: {
+        light: '#CBD5E0', // Very light grey text
+        dark: '#4A5568', // Dark grey text
+      },
+      border: {
+        light: '#E2E8F0', // Light border
+        dark: '#2D3748', // Dark border
+      },
+    },
   },
 };
 
@@ -107,5 +149,12 @@ export const theme = {
     small: 4,
     medium: 6,
     large: 8,
+  },
+  
+  // Opacity values for disabled states
+  opacity: {
+    disabled: 0.4,
+    muted: 0.6,
+    overlay: 0.8,
   },
 };
