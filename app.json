@@ -1,13 +1,20 @@
 {
   "expo": {
     "name": "Solace",
-    "slug": "solace",
+    "slug": "app",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "solace",
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "81c13ac3-2675-4741-9f50-23dfb535c805"
+      }
+    },
+    "owner": "ishaqamin"
   }
 }

@@ -1,47 +1,111 @@
 export const colors = {
-  // Background colors
   background: {
-    light: '#FFFCCD', // Pastel Peach
-    dark: '#131313', // Off-Black
+    light: '#F5F7FA', // Cool neutral grey-white
+    dark: '#1A1D23', // Deep charcoal
   },
   
-  // Primary colors
+  // Primary colors - Navy blue (trust, stability, professionalism)
   primary: {
-    main: '#F1C2FA', // Light Purple
+    main: '#2C5282', // Strong navy blue
+    light: '#4A90B8', // Lighter navy
+    dark: '#1A365D', // Darker navy
   },
   
-  // Accent colors (optional, can be extended later)
+  // Secondary colors - Forest green (growth, resilience, nature)
+  secondary: {
+    main: '#2F855A', // Forest green
+    light: '#48BB78', // Lighter green
+    dark: '#1A202C', // Very dark green-grey
+  },
+  
+  // Accent colors
   accent: {
-    peach: '#FFFCCD',
-    purple: '#F1C2FA',
-    grey: '#C0C0C0',
-    black: '#131313',
+    steel: '#718096', // Steel grey (industrial, strong)
+    copper: '#C05621', // Warm copper (energy, determination)
+    charcoal: '#2D3748', // Deep charcoal
+    slate: '#4A5568', // Slate grey
+    white: '#FFFFFF',
   },
   
   // Error colors
   error: {
-    main: '#EF4444',
+    main: '#E53E3E', // Strong red
+    light: '#FC8181',
+  },
+  
+  // Success colors
+  success: {
+    main: '#38A169', // Forest green
+    light: '#68D391',
+  },
+  
+  // Warning colors
+  warning: {
+    main: '#D69E2E', // Warm amber
+    light: '#F6E05E',
   },
   
   // Text colors
   text: {
     primary: {
-      light: '#FFFCCD', // Pastel Peach
-      dark: '#131313', // Off-Black
+      light: '#1A202C', // Very dark grey
+      dark: '#F7FAFC', // Off-white
+    },
+    secondary: {
+      light: '#4A5568', // Medium grey
+      dark: '#A0AEC0', // Light grey
+    },
+    muted: {
+      light: '#718096', // Steel grey
+      dark: '#718096', // Steel grey
     },
   },
   
   // UI colors
   ui: {
-    muted: {
-      light: '#C0C0C0', // Light Grey
-      dark: '#131313', // Off-Black (for dark muted)
+    border: {
+      light: '#E2E8F0', // Light border
+      dark: '#2D3748', // Dark border
     },
-    lavender: '#F1C2FA', // Light Purple
+    surface: {
+      light: '#FFFFFF', // White surface
+      dark: '#2D3748', // Dark surface
+    },
+    muted: {
+      light: '#F7FAFC', // Very light grey
+      dark: '#1A202C', // Very dark grey
+    },
+    focus: '#4299E1', // Bright blue for focus states
   },
 };
 
 export const theme = {
   colors,
-  // You can add more theme properties here like spacing, typography, etc.
-}; 
+  
+  // Typography weights that feel more masculine
+  typography: {
+    weights: {
+      regular: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+  },
+  
+  // Spacing system
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    xxl: 48,
+  },
+  
+  // Border radius - slightly more angular
+  borderRadius: {
+    small: 4,
+    medium: 6,
+    large: 8,
+  },
+};

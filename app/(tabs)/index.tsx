@@ -1,15 +1,15 @@
 import { StyledCalendar } from '@/components/Calendar';
+
 import GradientBackground from '@/components/GradientBackground';
 import { PainScaleCircles } from '@/components/ScaleCircles';
 import { PainScaleSlider } from '@/components/ScaleSlider';
 import { colors } from '@/constants/theme';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
   return (
     <GradientBackground  showHeader={false}>
       <View style={styles.container}>
-        <Text style={styles.text}>Home screen</Text>
         <View style={styles.scaleContainer}> 
           <View style={{marginBottom: 10}}>
             <PainScaleSlider initialValue={5} onValueChange={(e: number) => {console.log('value changed', e)}} />

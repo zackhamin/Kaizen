@@ -24,12 +24,12 @@ export default function RootLayout() {
       
       {/* Modal screens */}
       <Stack.Screen 
-        name="create-post" 
+        name="sos-page" 
         options={{
           presentation: 'modal',
           animation: 'slide_from_bottom',
           headerShown: true,
-          headerTitle: 'Create Post',
+          headerTitle: 'SOS',
           headerStyle: {
             backgroundColor: colors.background.light,
           },
@@ -104,5 +104,5 @@ export default function RootLayout() {
       />
     </Stack>
     </GestureHandlerRootView>
-    );
+  );
 }
