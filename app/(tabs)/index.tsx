@@ -1,46 +1,42 @@
 import { HorizontalCalendar } from '@/components';
+import { QuestionCard, QuoteCard } from '@/components/Cards';
 import GradientBackground from '@/components/GradientBackground';
-import { colors } from '@/constants/theme';
 import { StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
   return (
-    <GradientBackground  showHeader={false}>
+    <GradientBackground showHeader={true}>
       <View style={styles.container}>
         <View style={styles.scaleContainer}> 
           <HorizontalCalendar onDateChange={(date) => {console.log('date changed', date)}} />
-          {/* <View style={{marginBottom: 10}}>
-            <PainScaleSlider initialValue={5} onValueChange={(e: number) => {console.log('value changed', e)}} />
-          </View> */}
-
-            {/* <PainScaleBar value={5} onValueChange={() => {}} /> */}
-{/* 
-          <View style={{marginBottom: 0}}>
-            <PainScaleCircles initialValue={5} onValueChange={() => {}} /> 
-          </View>
-        <View style={{marginBottom: 10}}>
-          <HorizontalCalendar  />
-          <StyledCalendar />
-        </View> */}
-      </View>
         </View>
+        <View style={styles.quoteContainer}>
+          <QuoteCard transparent={true} quote="Today does not have to be perfect, OK will do." author="Me" />
+        </View>
+        <View style={styles.questionContainer}>
+          <QuestionCard question="How are you feeling today?" onValueChange={(value) => {console.log('value changed', value)}} /> 
+        </View>
+      </View>
     </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,  
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    color: colors.text.primary.dark,
+    flex: 1,
+    paddingTop: 16,
   },
   scaleContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 16,
+  },
+  quoteContainer: {
+    width: '100%',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  questionContainer: {
+    width: '100%',
+    paddingHorizontal: 16,
   },
 });

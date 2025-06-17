@@ -51,25 +51,16 @@ export const PainScaleCircles: React.FC<PainScaleCirclesProps> = ({
   
   const config = sizeConfig[size];
 
-  // Color scheme based on pain level - same as slider
+  // Color scheme based on rating level
   const getColorScheme = (value: number): ColorScheme => {
-    if (value === 0) return { bg: '#4CAF50', text: '#FFFFFF' };
-    if (value <= 3) return { bg: '#8BC34A', text: '#FFFFFF' };
-    if (value <= 6) return { bg: '#FF9800', text: '#FFFFFF' };
-    if (value <= 8) return { bg: '#F44336', text: '#FFFFFF' };
-    return { bg: '#B71C1C', text: '#FFFFFF' };
-  };
-
-  const getPainLabel = (value: number): string => {
-    if (value === 0) return 'No Pain';
-    if (value <= 3) return 'Mild Pain';
-    if (value <= 6) return 'Moderate Pain';
-    if (value <= 8) return 'Severe Pain';
-    return 'Worst Possible Pain';
+    if (value === 0) return { bg: '#4CAF50', text: '#FFFFFF' }; // Great - Green
+    if (value <= 2) return { bg: '#8BC34A', text: '#FFFFFF' }; // Good - Light Green
+    if (value <= 4) return { bg: '#FF9800', text: '#FFFFFF' }; // Okay - Orange
+    return { bg: '#F44336', text: '#FFFFFF' }; // Shit - Red
   };
 
   const updateValue = (newValue: number) => {
-    if (newValue !== currentValue && newValue >= 0 && newValue <= 10 && !disabled) {
+    if (newValue !== currentValue && newValue >= 0 && newValue <= 6 && !disabled) {
       setCurrentValue(newValue);
       onValueChange?.(newValue);
     }
@@ -113,7 +104,7 @@ export const PainScaleCircles: React.FC<PainScaleCirclesProps> = ({
     return (
       <GestureDetector gesture={tapGesture}>
         <AnimatedPressable
-                      style={[
+          style={[
             styles.circle,
             {
               width: config.circleSize,
@@ -122,7 +113,7 @@ export const PainScaleCircles: React.FC<PainScaleCirclesProps> = ({
               backgroundColor,
               borderWidth,
               borderColor,
-              marginHorizontal: 1,
+              marginHorizontal: 2,
               opacity: disabled ? 0.5 : 1,
             },
             animatedStyle
@@ -146,34 +137,13 @@ export const PainScaleCircles: React.FC<PainScaleCirclesProps> = ({
   };
 
   const renderCircles = (): React.JSX.Element[] => {
-    return Array.from({ length: 11 }, (_, index) => (
+    return Array.from({ length: 7 }, (_, index) => (
       <CircleItem key={index} index={index} />
     ));
   };
 
-  const colorScheme = getColorScheme(currentValue);
-
   return (
     <View style={[styles.container, { padding: config.padding }]}>
-      {showLabels && (
-        <View style={styles.headerContainer}>
-          <Text style={[styles.currentValue, { 
-            fontSize: config.fontSize + 10,
-            color: colorScheme.bg 
-          }]}>
-            {currentValue}/10
-          </Text>
-          <View style={[styles.labelBadge, { backgroundColor: colorScheme.bg }]}>
-            <Text style={[styles.painLabel, { 
-              color: colorScheme.text,
-              fontSize: config.fontSize 
-            }]}>
-              {getPainLabel(currentValue)}
-            </Text>
-          </View>
-        </View>
-      )}
-      
       <View style={[
         styles.circlesContainer,
         layout === 'grid' ? styles.gridLayout : styles.horizontalLayout
@@ -187,13 +157,13 @@ export const PainScaleCircles: React.FC<PainScaleCirclesProps> = ({
             fontSize: config.fontSize - 2,
             opacity: disabled ? 0.5 : 1 
           }]}>
-            😌 No Pain
+            😊 Great
           </Text>
           <Text style={[styles.endLabel, { 
             fontSize: config.fontSize - 2,
             opacity: disabled ? 0.5 : 1 
           }]}>
-            😵 Worst Pain
+            💩 Shit
           </Text>
         </View>
       )}
@@ -210,27 +180,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  currentValue: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  labelBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  painLabel: {
-    fontWeight: '600',
+    overflow: 'hidden',
   },
   circlesContainer: {
     marginBottom: 0,
@@ -239,6 +189,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 8,
   },
   gridLayout: {
     flexDirection: 'row',

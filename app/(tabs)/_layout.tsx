@@ -43,11 +43,11 @@ export default function TabLayout() {
         />
         
         <Tabs.Screen
-          name="pods"
+          name="wins"
           options={{
-            title: 'Pods',
+            title: 'Wins',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="people" size={size} color={color} />
+              <Ionicons name="trophy" size={size} color={color} />
             ),
           }}
         />

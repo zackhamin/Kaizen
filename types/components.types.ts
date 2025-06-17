@@ -12,4 +12,4 @@ export interface PainScaleProps {
 
 export interface PainScaleCirclesProps extends PainScaleProps {
   size?: 'small' | 'medium' | 'large';
-}
+} 

@@ -25,27 +25,26 @@ export default function SignInScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [fullName, setFullName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSignIn = async (provider: 'google' | 'apple') => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${process.env.EXPO_PUBLIC_APP_URL}/auth/callback`,
+          redirectTo: 'exp://192.168.1.100:8081/--/(tabs)',
         },
       });
 
       if (error) throw error;
-
-      // Profile will be created automatically when getCurrentUser is called
-    } catch (error) {
-      console.error('Error signing in:', error);
-      Alert.alert('Error', 'Failed to sign in. Please try again.');
+      console.log('OAuth sign in successful');
+    } catch (error: any) {
+      console.error('OAuth sign in error:', error);
+      Alert.alert('Error', `Failed to sign in with ${provider}`);
     } finally {
       setLoading(false);
     }
@@ -57,18 +56,30 @@ export default function SignInScreen() {
       return;
     }
 
+    if (isSignUp && password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    if (isSignUp && !fullName.trim()) {
+      Alert.alert('Error', 'Please enter your full name');
+      return;
+    }
+
     try {
       setLoading(true);
       console.log('Attempting to', isSignUp ? 'sign up' : 'sign in', 'with email:', email);
       
       if (isSignUp) {
-        // Try sign up with minimal data first
-        console.log('Attempting sign up with minimal data...');
+        // Sign up with user metadata
+        console.log('Attempting sign up with full name:', fullName);
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: {} // Empty data object
+            data: {
+              full_name: fullName.trim()
+            }
           }
         });
 
@@ -88,11 +99,17 @@ export default function SignInScreen() {
           console.log('Sign up successful, user created:', signUpData.user.id);
           Alert.alert(
             'Success',
-            'Please check your email for the confirmation link'
+            'Please check your email for the confirmation link before signing in.'
           );
+          // Clear form and switch to sign in mode
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+          setFullName('');
+          setIsSignUp(false);
         }
       } else {
-        // Sign in flow remains the same
+        // Sign in flow
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -112,7 +129,43 @@ export default function SignInScreen() {
 
         if (signInData?.user) {
           console.log('Sign in successful, user:', signInData.user.id);
-          router.replace('/(tabs)');
+          
+          // Wait a moment for the session to fully establish
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Ensure user profile exists
+          try {
+            console.log('Ensuring user profile exists...');
+            const profile = await userService.ensureUserRecord();
+            console.log('User profile ensured successfully:', profile.id);
+            router.replace('/(tabs)');
+          } catch (userError) {
+            console.error('Error ensuring user profile:', userError);
+            
+            // If it's a permission error, try again after a longer delay
+            if (userError.code === '42501') {
+              console.log('Permission denied, waiting and retrying...');
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              try {
+                const profile = await userService.ensureUserRecord();
+                console.log('Retry successful:', profile.id);
+                router.replace('/(tabs)');
+              } catch (retryError) {
+                console.error('Retry failed:', retryError);
+                Alert.alert(
+                  'Error',
+                  'There was an issue setting up your profile. Please sign out and sign in again.'
+                );
+              }
+            } else {
+              Alert.alert(
+                'Warning',
+                'Signed in successfully but there was an issue setting up your profile. Please try refreshing the app.'
+              );
+              router.replace('/(tabs)');
+            }
+          }
         }
       }
     } catch (error: any) {
@@ -169,36 +222,41 @@ export default function SignInScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Full Name"
-                placeholderTextColor={colors.ui.muted.light}
+                placeholderTextColor={colors.accent.slate}
                 value={fullName}
                 onChangeText={setFullName}
+                autoCapitalize="words"
+                autoComplete="name"
               />
             )}
             <TextInput
               style={styles.input}
               placeholder="Email Address"
-              placeholderTextColor={colors.ui.muted.light}
+              placeholderTextColor={colors.accent.slate}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
+              autoComplete="email"
             />
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor={colors.ui.muted.light}
+              placeholderTextColor={colors.accent.slate}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              autoComplete="password"
             />
             {isSignUp && (
               <TextInput
                 style={styles.input}
                 placeholder="Confirm Password"
-                placeholderTextColor={colors.ui.muted.light}
+                placeholderTextColor={colors.accent.slate}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
+                autoComplete="password"
               />
             )}
             {!isSignUp && (
@@ -280,7 +338,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: colors.ui.muted.light,
-    color: colors.text.primary.dark,
+    color: colors.text.primary.light,
   },
   forgotPassword: {
     color: colors.text.primary.dark,
@@ -289,7 +347,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   mainButton: {
-    backgroundColor: colors.text.primary.dark,
+    backgroundColor: colors.text.primary.light,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
@@ -306,7 +364,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleButtonText: {
-    color: colors.text.primary.dark,
+    color: colors.text.primary.light,
     fontSize: 14,
     textAlign: 'center',
   },

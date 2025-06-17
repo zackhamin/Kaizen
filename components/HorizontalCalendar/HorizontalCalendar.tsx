@@ -1,20 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 
 import { DAYS_SHORT } from '@/constants/components.constants';
 import { colors, theme } from '@/constants/theme';
 import { CalendarBarProps, SizeConfig } from './types';
 
-const AnimatedPressable = Animated.createAnimatedComponent(View);
-
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { width: screenWidth } = Dimensions.get('window');
 
 const HorizontalCalendar: React.FC<CalendarBarProps> = ({
@@ -27,9 +23,6 @@ const HorizontalCalendar: React.FC<CalendarBarProps> = ({
   disabled = false,
 }) => {
   const [selectedDay, setSelectedDay] = useState<Date>(selectedDate);
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getWeekStart(selectedDate));
-  const [displayMonth, setDisplayMonth] = useState<Date>(selectedDate);
-  const scrollViewRef = useRef<ScrollView>(null);
 
   // Size configurations
   const sizeConfig: Record<string, SizeConfig> = {
@@ -41,13 +34,6 @@ const HorizontalCalendar: React.FC<CalendarBarProps> = ({
   const config = sizeConfig[size];
   const dayWidth = screenWidth / 7; // Equal width for each day
 
-  function getWeekStart(date: Date): Date {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
-    return new Date(d.setDate(diff));
-  }
-
   function addDays(date: Date, days: number): Date {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
@@ -55,16 +41,12 @@ const HorizontalCalendar: React.FC<CalendarBarProps> = ({
   }
 
   function isSameDay(date1: Date, date2: Date): boolean {
-    // Check if both parameters are valid Date objects
     if (!date1 || !date2 || !(date1 instanceof Date) || !(date2 instanceof Date)) {
       return false;
     }
-    
-    // Check if dates are valid (not Invalid Date)
     if (isNaN(date1.getTime()) || isNaN(date2.getTime())) {
       return false;
     }
-    
     return date1.toDateString() === date2.toDateString();
   }
 
@@ -72,18 +54,15 @@ const HorizontalCalendar: React.FC<CalendarBarProps> = ({
     return isSameDay(date, new Date());
   }
 
-  const handleDateSelect = (date: Date) => {
+  const handleDateSelect = useCallback((date: Date) => {
     if (disabled || !date) return;
     
-    // Ensure we're working with a valid Date object
     const selectedDate = new Date(date.getTime());
-    console.log('Selected date:', selectedDate);
-    
     setSelectedDay(selectedDate);
     onDateChange?.(selectedDate);
-  };
+  }, [disabled, onDateChange]);
 
-  const getIndicatorColor = (date: Date): string => {
+  const getIndicatorColor = useCallback((date: Date): string => {
     if (!getDataIndicator) return colors.calendar.indicator.default;
     
     const indicator = getDataIndicator(date);
@@ -93,63 +72,57 @@ const HorizontalCalendar: React.FC<CalendarBarProps> = ({
       case 'mood': return colors.calendar.indicator.mood;
       default: return colors.calendar.indicator.default;
     }
-  };
+  }, [getDataIndicator]);
 
-  // Generate weeks for infinite scroll
-  const generateWeeks = (): Date[][] => {
-    const weeks: Date[][] = [];
+  // Generate just the current week (7 days starting from today)
+  const dates = useMemo(() => {
+    const today = new Date();
+    const dateArray: Date[] = [];
     
-    // Generate 21 weeks: 10 before current, current, 10 after for smooth infinite scroll
-    for (let weekOffset = -10; weekOffset <= 10; weekOffset++) {
-      const weekStart = addDays(currentWeekStart, weekOffset * 7);
-      const week: Date[] = [];
-      
-      for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-        week.push(addDays(weekStart, dayOffset));
-      }
-      
-      weeks.push(week);
+    // Start from today and show next 7 days
+    for (let i = 0; i < 7; i++) {
+      dateArray.push(addDays(today, i));
     }
     
-    return weeks;
-  };
+    return dateArray;
+  }, []); // Only calculate once on mount
 
   const DayCell: React.FC<{ date: Date; index: number }> = ({ date, index }) => {
     const scale = useSharedValue(1);
-    const opacity = useSharedValue(1);
     
     const isSelected = isSameDay(date, selectedDay);
     const isDayToday = isToday(date);
     const hasData = hasDataForDate?.(date) || getDataIndicator?.(date) !== 'none';
     
-    const tapGesture = Gesture.Tap()
-      .onBegin(() => {
-        scale.value = withSpring(0.85);
-        opacity.value = withTiming(0.7);
-      })
-      .onEnd(() => {
-        scale.value = withSpring(1);
-        opacity.value = withTiming(1);
-        runOnJS(handleDateSelect)(date);
-      })
-      .enabled(!disabled);
+    const onPress = useCallback(() => {
+      if (disabled) return;
+      
+      scale.value = withSpring(0.9, { duration: 150 }, () => {
+        scale.value = withSpring(1, { duration: 150 });
+      });
+      
+      handleDateSelect(date);
+    }, [date, disabled]);
 
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
-      opacity: opacity.value,
     }));
 
     const backgroundColor = isSelected 
-      ? colors.calendar.selected[themeMode]
+      ? (disabled ? colors.calendar.disabled?.background?.[themeMode] : colors.calendar.selected[themeMode])
       : isDayToday
-        ? colors.primary.light // Highlight today's date
-        : colors.calendar.cardBackground[themeMode];
+        ? (disabled ? colors.calendar.disabled?.background?.[themeMode] : colors.secondary.light) // Use secondary.light for today
+        : (disabled ? colors.calendar.disabled?.background?.[themeMode] : colors.ui.surface[themeMode]); // Box around all dates
     
-    const textColor = isSelected 
-      ? colors.accent.white 
+    const borderColor = isSelected
+      ? (disabled ? colors.calendar.disabled?.border?.[themeMode] : colors.calendar.selected[themeMode])
       : isDayToday
-        ? colors.accent.white // White text for today
-        : colors.text.primary[themeMode];
+        ? (disabled ? colors.calendar.disabled?.border?.[themeMode] : colors.secondary.light)
+        : (disabled ? colors.calendar.disabled?.border?.[themeMode] : colors.ui.border[themeMode]);
+    
+    const textColor = isSelected || isDayToday
+      ? (disabled ? colors.text.disabled?.[themeMode] : colors.accent.white)
+      : (disabled ? colors.text.disabled?.[themeMode] : colors.text.primary[themeMode]);
 
     return (
       <View style={[styles.dayContainer, { width: dayWidth }]}>
@@ -158,154 +131,94 @@ const HorizontalCalendar: React.FC<CalendarBarProps> = ({
           styles.dayLetter,
           {
             fontSize: config.dayLetterSize,
-            color: colors.text.secondary[themeMode],
+            color: disabled ? colors.text.disabled?.[themeMode] : colors.text.secondary[themeMode],
             marginBottom: theme.spacing.xs,
             fontWeight: '600',
           }
         ]}>
-          {DAYS_SHORT[index]}
+          {DAYS_SHORT[date.getDay() === 0 ? 6 : date.getDay() - 1]}
         </Text>
         
-        {/* Day Cell - Floating Square */}
-        <GestureDetector gesture={tapGesture}>
-          <AnimatedPressable
-            style={[
-              styles.dayCell,
+        {/* Day Cell with Box */}
+        <AnimatedPressable
+          onPress={onPress}
+          style={[
+            styles.dayCell,
+            {
+              width: config.daySize,
+              height: config.daySize,
+              backgroundColor,
+              borderRadius: theme.borderRadius.medium,
+              borderWidth: 1,
+              borderColor,
+              marginHorizontal: (dayWidth - config.daySize) / 2,
+              opacity: disabled ? 0.4 : 1,
+            },
+            animatedStyle
+          ]}
+        >
+          <Text style={[
+            styles.dayText,
+            {
+              fontSize: config.fontSize,
+              color: textColor,
+              fontWeight: isSelected 
+                ? '700'
+                : isDayToday 
+                  ? '600'
+                  : '500',
+            }
+          ]}>
+            {date.getDate()}
+          </Text>
+          
+          {/* Data Indicator */}
+          {hasData && !disabled && (
+            <View style={[
+              styles.indicator,
               {
-                width: config.daySize,
-                height: config.daySize,
-                backgroundColor,
-                borderRadius: theme.borderRadius.medium,
-                marginHorizontal: (dayWidth - config.daySize) / 2,
-              },
-              animatedStyle
-            ]}
-          >
-            <Text style={[
-              styles.dayText,
-              {
-                fontSize: config.fontSize,
-                color: textColor,
-                fontWeight: isSelected 
-                  ? '700'
-                  : isDayToday  
-                    ?   '600'
-                    : '500',
+                width: config.indicatorSize,
+                height: config.indicatorSize,
+                borderRadius: config.indicatorSize / 2,
+                backgroundColor: getIndicatorColor(date),
+                bottom: 2,
               }
-            ]}>
-              {date.getDate()}
-            </Text>
-            
-            {/* Data Indicator */}
-            {hasData && (
-              <View style={[
-                styles.indicator,
-                {
-                  width: config.indicatorSize,
-                  height: config.indicatorSize,
-                  borderRadius: config.indicatorSize / 2,
-                  backgroundColor: getIndicatorColor(date),
-                  bottom: 2,
-                }
-              ]} />
-            )}
-          </AnimatedPressable>
-        </GestureDetector>
+            ]} />
+          )}
+        </AnimatedPressable>
       </View>
     );
   };
 
-  const WeekRow: React.FC<{ week: Date[]; weekIndex: number }> = ({ week, weekIndex }) => {
-    return (
-      <View style={[styles.weekRow, { width: screenWidth }]}>
-        {week.map((date, dayIndex) => (
-          <DayCell key={date.toISOString()} date={date} index={dayIndex} />
-        ))}
-      </View>
-    );
-  };
-
-  const weeks = generateWeeks();
-
-  // Ensure selectedDay is always a valid Date object
-  useEffect(() => {
-    const isValidDate = selectedDay && selectedDay instanceof Date && !isNaN(selectedDay.getTime());
-    if (!isValidDate) {
-      const newDate = new Date(selectedDate.getTime());
-      setSelectedDay(newDate);
-    }
-  }, [selectedDate, selectedDay]);
-
-  useEffect(() => {
-    // Scroll to center week (index 10) on mount
-    setTimeout(() => {
-      scrollViewRef.current?.scrollTo({
-        x: screenWidth * 10,
-        animated: false,
-      });
-    }, 100);
-  }, []);
-
-  const handleScroll = (event: any) => {
-    const { contentOffset } = event.nativeEvent;
-    const weekIndex = Math.round(contentOffset.x / screenWidth);
-    
-    // Update current week based on scroll position
-    if (weekIndex >= 0 && weekIndex < weeks.length) {
-      const newWeekStart = weeks[weekIndex][0];
-      if (newWeekStart && !isSameDay(newWeekStart, currentWeekStart)) {
-        const validWeekStart = new Date(newWeekStart);
-        setCurrentWeekStart(validWeekStart);
-        
-        // Update display month based on the middle of the current week
-        const midWeekDate = addDays(validWeekStart, 3); // Wednesday of the week
-        setDisplayMonth(new Date(midWeekDate));
-      }
-    }
-  };
+  // Get current month for header
+  const currentMonth = selectedDay.toLocaleDateString('en-US', { 
+    month: 'long',
+    year: 'numeric'
+  });
 
   return (
     <View style={[styles.container, { 
       backgroundColor: 'transparent',
       paddingVertical: config.padding,
+      opacity: disabled ? 0.6 : 1,
     }]}>
       {/* Month Header */}
       <View style={styles.header}>
         <Text style={[styles.monthText, { 
-          color: colors.text.primary[themeMode],
+          color: disabled ? colors.text.disabled?.[themeMode] : colors.text.primary[themeMode],
           fontSize: config.fontSize + 2,
           fontWeight: '600',
         }]}>
-          {displayMonth && displayMonth instanceof Date && !isNaN(displayMonth.getTime()) 
-            ? displayMonth.toLocaleDateString('en-US', { 
-                month: 'long',
-                year: 'numeric'
-              })
-            : new Date().toLocaleDateString('en-US', { 
-                month: 'long',
-                year: 'numeric'
-              })
-          }
+          {currentMonth}
         </Text>
       </View>
 
-      {/* Scrollable Week View - Full Width */}
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-        contentContainerStyle={styles.scrollContent}
-        style={styles.scrollView}
-        decelerationRate="fast"
-        snapToInterval={screenWidth}
-        snapToAlignment="start"
-      >
-        {weeks.map((week, weekIndex) => (
-          <WeekRow key={`week-${weekIndex}`} week={week} weekIndex={weekIndex} />
+      {/* Single Row of 7 Days */}
+      <View style={styles.weekRow}>
+        {dates.map((date, index) => (
+          <DayCell key={date.toISOString()} date={date} index={index} />
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -321,11 +234,8 @@ const styles = StyleSheet.create({
   monthText: {
     textAlign: 'left',
   },
-  scrollView: {
-    flexGrow: 0,
-  },
-  scrollContent: {
-    alignItems: 'flex-start',
+  weeksContainer: {
+    paddingHorizontal: 0,
   },
   weekRow: {
     flexDirection: 'row',
@@ -334,10 +244,12 @@ const styles = StyleSheet.create({
   },
   dayContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    minHeight: 70,
   },
   dayLetter: {
     textAlign: 'center',
+    height: 16,
   },
   dayCell: {
     justifyContent: 'center',
