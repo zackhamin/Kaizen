@@ -1,5 +1,3 @@
-// Add this to your existing theme.ts file
-
 export const colors = {
   background: {
     light: '#F5F7FA', // Cool neutral grey-white
@@ -119,20 +117,52 @@ export const colors = {
       },
     },
   },
+
+  // Glass effect colors for chat bubbles and overlays
+  glass: {
+    // Chat bubble backgrounds
+    userBubble: 'rgba(255, 255, 255, 0.2)', // Semi-transparent white for user messages
+    assistantBubble: 'rgba(255, 255, 255, 0.1)', // More transparent for AI messages
+    
+    // Input and overlay backgrounds
+    inputBackground: 'rgba(255, 255, 255, 0.1)', // Text input background
+    inputBorder: 'rgba(255, 255, 255, 0.3)', // Text input border
+    overlay: 'rgba(255, 255, 255, 0.05)', // General overlay background
+    overlayBorder: 'rgba(255, 255, 255, 0.15)', // General overlay borders
+    
+    // Button states
+    buttonDefault: 'rgba(255, 255, 255, 0.2)', // Default glass button
+    buttonDisabled: 'rgba(255, 255, 255, 0.15)', // Disabled glass button
+    buttonPressed: 'rgba(255, 255, 255, 0.3)', // Pressed glass button
+    
+    // Text colors with transparency
+    text: {
+      primary: 'rgba(255, 255, 255, 1)', // Fully opaque white text
+      secondary: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white
+      muted: 'rgba(255, 255, 255, 0.7)', // More muted white
+      placeholder: 'rgba(255, 255, 255, 0.6)', // Placeholder text
+      disabled: 'rgba(255, 255, 255, 0.4)', // Disabled text
+    },
+
+    // Conversation list items
+    conversationCard: 'rgba(255, 255, 255, 0.08)', // Conversation list item background
+    conversationBorder: 'rgba(255, 255, 255, 0.15)', // Conversation list item border
+    sessionType: 'rgba(255, 255, 255, 0.15)', // Session type badge background
+  },
 };
 
 export const theme = {
   colors,
   
-  // Typography weights that feel more masculine
+  // Typography weights - using strings for React Native compatibility
   typography: {
     weights: {
-      regular: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
+      regular: '400',
+      medium: '500',
+      semibold: '600',
+      bold: '700',
     },
-  },
+  } as const,
   
   // Spacing system
   spacing: {

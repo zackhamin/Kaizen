@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '../constants/theme';
+import { colors } from '../../constants/theme';
 
 export default function Header() {
   const router = useRouter();

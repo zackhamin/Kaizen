@@ -1,11 +1,11 @@
 import { HorizontalCalendar } from '@/components';
-import { QuestionCard, QuoteCard } from '@/components/Cards';
-import GradientBackground from '@/components/GradientBackground';
+import { QuoteCard } from '@/components/Cards';
+import GradientBackground from '@/components/Layout/GradientBackground';
 import { StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
   return (
-    <GradientBackground showHeader={true}>
+    <GradientBackground showHeader={false}>
       <View style={styles.container}>
         <View style={styles.scaleContainer}> 
           <HorizontalCalendar onDateChange={(date) => {console.log('date changed', date)}} />
@@ -14,7 +14,7 @@ export default function HomeScreen() {
           <QuoteCard transparent={true} quote="Today does not have to be perfect, OK will do." author="Me" />
         </View>
         <View style={styles.questionContainer}>
-          <QuestionCard question="How are you feeling today?" onValueChange={(value) => {console.log('value changed', value)}} /> 
+          {/* <QuestionCard question="How are you feeling today?" onValueChange={(value) => {console.log('value changed', value)}} />  */}
         </View>
       </View>
     </GradientBackground>

@@ -5,6 +5,7 @@ import { Card } from './Card';
 
 interface QuestionCardProps {
   question: string;
+  initialValue?: number;
   onValueChange?: (value: number) => void;
   transparent?: boolean;
   showLabels?: boolean;
@@ -12,8 +13,9 @@ interface QuestionCardProps {
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
+  initialValue = 0,
   onValueChange,
-  transparent = false,
+  transparent = true,
   showLabels = true,
 }) => {
   return (
@@ -22,6 +24,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       title={question}
     >
       <PainScaleCircles
+        initialValue={initialValue}
         onValueChange={onValueChange}
         showLabels={showLabels}
       />

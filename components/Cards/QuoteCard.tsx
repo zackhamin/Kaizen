@@ -17,7 +17,7 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
   return (
     <Card transparent={transparent}>
       <View style={styles.quoteContainer}>
-        <Text style={[styles.quote, { color: colors.text.primary.light }]}>
+        <Text style={[styles.quote, { color: colors.text.primary.dark }]}>
           "{quote}"
         </Text>
         {author && (

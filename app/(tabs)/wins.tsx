@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/GradientBackground';
+import GradientBackground from '@/components/Layout/GradientBackground';
 import Todos from '@/components/Todos/Todos';
 import { colors } from '@/constants/theme';
 import { StyleSheet, View } from 'react-native';

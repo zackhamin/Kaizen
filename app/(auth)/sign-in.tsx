@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/GradientBackground';
+import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';

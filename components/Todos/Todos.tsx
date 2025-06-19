@@ -1,19 +1,20 @@
+import { colors } from '@/constants/theme';
 import { Task, TaskService } from '@/services/task.service';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import GradientBackground from '../Layout/GradientBackground';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -112,29 +113,30 @@ const Todos: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <GradientBackground showHeader={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1f2937" />
+          <ActivityIndicator size="large" color={colors.accent.white} />
           <Text style={styles.loadingText}>Loading tasks...</Text>
         </View>
-      </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <GradientBackground showHeader={false}>
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Your To Do</Text>
+          <Text style={styles.title}>Small Wins For Today</Text>
           
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
               placeholder="Add new task"
-              placeholderTextColor="#999"
+              placeholderTextColor="rgba(255, 255, 255, 0.6)"
               value={inputText}
               onChangeText={setInputText}
               onSubmitEditing={addTodo}
@@ -149,7 +151,7 @@ const Todos: React.FC = () => {
               disabled={addingTask}
             >
               {addingTask ? (
-                <ActivityIndicator size="small" color="white" />
+                <ActivityIndicator size="small" color={colors.accent.white} />
               ) : (
                 <Text style={styles.addButtonText}>+</Text>
               )}
@@ -172,14 +174,13 @@ const Todos: React.FC = () => {
           </Text>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardAvoidingView: {
     flex: 1,
-    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
@@ -189,16 +190,13 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
+    color: colors.accent.white,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 10,
+    paddingBottom: 70,
     width: '100%',
     maxWidth: screenWidth,
   },
@@ -206,7 +204,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 24,
-    color: '#1f2937',
+    color: colors.accent.white,
     textAlign: 'left',
   },
   inputContainer: {
@@ -217,18 +215,18 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 12,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    color: '#1f2937',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    color: colors.accent.white,
     minHeight: 44,
   },
   addButton: {
-    backgroundColor: '#1f2937',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -237,10 +235,10 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   addButtonDisabled: {
-    backgroundColor: '#9ca3af',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   addButtonText: {
-    color: 'white',
+    color: colors.accent.white,
     fontSize: 24,
     fontWeight: 'bold',
     lineHeight: 24,
@@ -255,13 +253,13 @@ const styles = StyleSheet.create({
   todoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -273,48 +271,48 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#d1d5db',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   checkboxChecked: {
-    backgroundColor: '#10b981',
-    borderColor: '#10b981',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
   },
   checkmark: {
-    color: 'white',
+    color: colors.accent.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
   todoText: {
     flex: 1,
     fontSize: 16,
-    color: '#1f2937',
+    color: colors.accent.white,
     lineHeight: 24,
   },
   todoTextCompleted: {
     textDecorationLine: 'line-through',
-    color: '#9ca3af',
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   deleteButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#ef4444',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
   },
   deleteButtonText: {
-    color: 'white',
+    color: colors.accent.white,
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 18,
   },
   remainingText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     marginTop: 16,
   },

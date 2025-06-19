@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/GradientBackground';
+import GradientBackground from '@/components/Layout/GradientBackground';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';

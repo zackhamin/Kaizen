@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/GradientBackground';
+import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors } from '@/constants/theme';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -9,7 +9,7 @@ export default function AboutScreen() {
         <Text style={styles.text}>About screen</Text>
       </View>
     </GradientBackground>
-  );
+  );  
 }
 
 const styles = StyleSheet.create({
