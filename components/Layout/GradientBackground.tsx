@@ -1,7 +1,7 @@
 import { colors } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { Platform, SafeAreaView, StyleSheet, View } from 'react-native';
 import Header from './Header';
 
 interface Props {
@@ -27,6 +27,11 @@ export default function GradientBackground({ children, showHeader = true }: Prop
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  content: { flex: 1 },
+  root: { 
+    flex: 1,
+  },
+  content: { 
+    flex: 1,
+    paddingBottom: Platform.OS === 'ios' ? 88 : 60, // Add padding to leave space for tab bar
+  },
 });
