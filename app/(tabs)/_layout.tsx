@@ -1,4 +1,4 @@
-import { SOSModal } from '@/components/Modals';
+import { SOSModal } from '@/components/Modals/SOSModal';
 import { colors } from '@/constants/theme';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
@@ -18,7 +18,7 @@ export default function TabLayout() {
           tabBarStyle: {  
             height: Platform.OS === 'ios' ? 88 : 60,
             paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-            backgroundColor: colors.primary.dark,
+            backgroundColor: colors.glass.overlay,
             position: 'absolute',
             elevation: 8,
             shadowColor: '#000',
