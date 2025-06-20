@@ -1,6 +1,6 @@
 import { colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
   Linking,
@@ -12,11 +12,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { aiVoiceServices } from './ai-voice-services';
 import { supportServices, youngPersonServices } from './support-services';
 import { SOSModalProps, SupportService } from './types';
 
-
 function SOSModal({ visible, onClose }: SOSModalProps) {
+  const [isVoiceCallActive, setIsVoiceCallActive] = useState(false);
+
   const handleCall = async (phone: string, serviceName: string) => {
     try {
       const phoneUrl = `tel:${phone}`;
@@ -32,32 +34,49 @@ function SOSModal({ visible, onClose }: SOSModalProps) {
     }
   };
 
-  const renderServiceCard = (service: SupportService) => (
+  const renderServiceCard = (service: SupportService, isAIService = false) => (
     <TouchableOpacity
-      key={service.name}
+      key={`${service.name}-${service.phone}`}
       style={[
         styles.serviceCard,
-        service.urgent && styles.urgentServiceCard
+        service.urgent && styles.urgentServiceCard,
+        isAIService && styles.aiServiceCard
       ]}
       onPress={() => handleCall(service.phone, service.name)}
       activeOpacity={0.7}
     >
       <View style={styles.serviceHeader}>
-        <View style={styles.serviceIconContainer}>
+        <View style={[
+          styles.serviceIconContainer,
+          isAIService && styles.aiServiceIconContainer
+        ]}>
           <Ionicons 
             name={service.icon} 
             size={24} 
-            color={service.urgent ? colors.background.light : colors.primary.main} 
+            color={
+              isAIService 
+                ? colors.accent.white 
+                : service.urgent 
+                  ? colors.background.light 
+                  : colors.primary.main
+            } 
           />
         </View>
         <View style={styles.serviceInfo}>
           <View style={styles.serviceNameRow}>
             <Text style={[
               styles.serviceName,
-              service.urgent && styles.urgentServiceName
+              service.urgent && styles.urgentServiceName,
+              isAIService && styles.aiServiceName
             ]}>
               {service.name}
             </Text>
+            {isAIService && (
+              <View style={styles.aiBadge}>
+                <Ionicons name="sparkles" size={12} color={colors.accent.white} />
+                <Text style={styles.aiBadgeText}>AI</Text>
+              </View>
+            )}
             {service.specialty && (
               <View style={styles.specialtyBadge}>
                 <Text style={styles.specialtyText}>{service.specialty}</Text>
@@ -66,13 +85,15 @@ function SOSModal({ visible, onClose }: SOSModalProps) {
           </View>
           <Text style={[
             styles.servicePhone,
-            service.urgent && styles.urgentServicePhone
+            service.urgent && styles.urgentServicePhone,
+            isAIService && styles.aiServicePhone
           ]}>
             {service.phone}
           </Text>
           <Text style={[
             styles.serviceHours,
-            service.urgent && styles.urgentServiceHours
+            service.urgent && styles.urgentServiceHours,
+            isAIService && styles.aiServiceHours
           ]}>
             {service.hours}
           </Text>
@@ -80,7 +101,8 @@ function SOSModal({ visible, onClose }: SOSModalProps) {
       </View>
       <Text style={[
         styles.serviceDescription,
-        service.urgent && styles.urgentServiceDescription
+        service.urgent && styles.urgentServiceDescription,
+        isAIService && styles.aiServiceDescription
       ]}>
         {service.description}
       </Text>
@@ -112,18 +134,34 @@ function SOSModal({ visible, onClose }: SOSModalProps) {
             </Text>
           </View>
 
-          <Text style={styles.sectionTitle}>Immediate Support</Text>
+          {/* AI Voice Support Section */}
+          <View style={styles.aiSection}>
+            <View style={styles.aiSectionHeader}>
+              <Ionicons name="mic" size={20} color={colors.secondary.main} />
+              <Text style={styles.aiSectionTitle}>AI Voice Support</Text>
+              <View style={styles.aiSectionBadge}>
+                <Ionicons name="sparkles" size={14} color={colors.accent.white} />
+                <Text style={styles.aiSectionBadgeText}>24/7</Text>
+              </View>
+            </View>
+            <Text style={styles.aiSectionDescription}>
+              Instant support from our AI coaches. Just call and start talking.
+            </Text>
+            {aiVoiceServices.map(service => renderServiceCard(service, true))}
+          </View>
+
+          <Text style={styles.sectionTitle}>Human Support</Text>
           {supportServices
             .filter(service => service.urgent)
-            .map(renderServiceCard)}
+            .map(service => renderServiceCard(service))}
 
           <Text style={styles.sectionTitle}>Additional Support</Text>
           {supportServices
             .filter(service => !service.urgent)
-            .map(renderServiceCard)}
+            .map(service => renderServiceCard(service))}
 
           <Text style={styles.sectionTitle}>Young Person Support</Text>
-          {youngPersonServices.map(renderServiceCard)}
+          {youngPersonServices.map(service => renderServiceCard(service))}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
@@ -182,6 +220,54 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
+  
+  // AI Section Styles
+  aiSection: {
+    marginBottom: 32,
+    padding: 20,
+    backgroundColor: colors.ui.surface.light,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.secondary.light,
+    shadowColor: colors.text.primary.light,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  aiSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  aiSectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text.primary.light,
+    flex: 1,
+  },
+  aiSectionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.secondary.main,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  aiSectionBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.accent.white,
+  },
+  aiSectionDescription: {
+    fontSize: 14,
+    color: colors.text.secondary.light,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -206,6 +292,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary.main,
     borderColor: colors.primary.dark,
   },
+  aiServiceCard: {
+    backgroundColor: colors.secondary.main,
+    borderColor: colors.secondary.dark,
+    marginBottom: 16,
+  },
   serviceHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -220,6 +311,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  aiServiceIconContainer: {
+    backgroundColor: colors.accent.white,
+  },
   serviceInfo: {
     flex: 1,
   },
@@ -228,6 +322,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 4,
+    flexWrap: 'wrap',
   },
   serviceName: {
     fontSize: 18,
@@ -237,6 +332,23 @@ const styles = StyleSheet.create({
   },
   urgentServiceName: {
     color: colors.background.light,
+  },
+  aiServiceName: {
+    color: colors.accent.white,
+  },
+  aiBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.accent.white,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 4,
+  },
+  aiBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.secondary.main,
   },
   specialtyBadge: {
     backgroundColor: colors.secondary.main,
@@ -258,6 +370,9 @@ const styles = StyleSheet.create({
   urgentServicePhone: {
     color: colors.background.light,
   },
+  aiServicePhone: {
+    color: colors.accent.white,
+  },
   serviceHours: {
     fontSize: 14,
     color: colors.text.secondary.light,
@@ -267,6 +382,10 @@ const styles = StyleSheet.create({
     color: colors.background.light,
     opacity: 0.9,
   },
+  aiServiceHours: {
+    color: colors.accent.white,
+    opacity: 0.9,
+  },
   serviceDescription: {
     fontSize: 14,
     color: colors.text.secondary.light,
@@ -274,6 +393,10 @@ const styles = StyleSheet.create({
   },
   urgentServiceDescription: {
     color: colors.background.light,
+    opacity: 0.9,
+  },
+  aiServiceDescription: {
+    color: colors.accent.white,
     opacity: 0.9,
   },
   footer: {

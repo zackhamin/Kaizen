@@ -208,12 +208,13 @@ export default function SignInScreen() {
         <View style={styles.content}>
           {/* Logo/Icon Section */}
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>Terminus</Text>
+            <Text style={styles.logoText}>Kaizen</Text>
           </View>
 
           {/* Header Text */}
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>Welcome to Terminus</Text>
+            <Text style={styles.title}>Welcome to Kaizen</Text>
+            <Text style={styles.title}>改善</Text>
           </View>
 
           {/* Sign In/Register Form */}
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleButtonText: {
-    color: colors.text.primary.light,
+    color: colors.text.primary.dark,
     fontSize: 14,
     textAlign: 'center',
   },
