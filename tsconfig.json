@@ -4,7 +4,12 @@
     "strict": true,
     "paths": {
       "@/*": [
-        "./*"
+        "./*",
+        "./app/*",
+        "./components/*",
+        "./constants/*",
+        "./hooks/*",
+        "./services/*"
       ]
     }
   },

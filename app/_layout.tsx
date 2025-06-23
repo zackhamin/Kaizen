@@ -1,4 +1,4 @@
-// app/_layout.tsx
+// app/_layout.tsx - Add community routes
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { router, Stack, useSegments } from 'expo-router';
@@ -45,20 +45,31 @@ export default function RootLayout() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inTabsGroup = segments[0] === '(tabs)';
+    const inCommunityPage = segments[0] === 'community' || segments[0] === 'thread';
+    const inOtherPages = segments[0] === 'communities' || segments[0] === 'gratitude' || segments[0] === 'settings' || segments[0] === 'create-thread';
     
     console.log('Navigation check:', {
       hasUser: !!session?.user,
       inAuthGroup,
+      inTabsGroup,
+      inCommunityPage,
+      inOtherPages,
       segments
     });
 
+    // Only redirect if user is not authenticated and not already in auth group
     if (!session?.user && !inAuthGroup) {
       console.log('No user, redirecting to auth');
       router.replace('/(auth)/sign-in');
-    } else if (session?.user && inAuthGroup) {
-      console.log('User found, redirecting to main app');
+    } 
+    // Only redirect to main app if user is authenticated but in auth group
+    else if (session?.user && inAuthGroup) {
+      console.log('User found in auth group, redirecting to main app');
       router.replace('/(tabs)');
     }
+    // Don't redirect if user is authenticated and on any valid page
+    // This prevents the app from resetting when auth state refreshes
   }, [session, segments, isLoading]);
 
   // Show loading spinner while checking auth
@@ -91,7 +102,42 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="gratitude" options={{ headerShown: false }} />
         
+        {/* Community Routes */}
+        <Stack.Screen name="communities" options={{ headerShown: false }} />
+        <Stack.Screen name="community/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="thread/[id]" options={{ headerShown: false }} />
+        
         {/* Modal screens */}
+        <Stack.Screen 
+          name="create-thread" 
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+            headerShown: true,
+            headerTitle: 'Create Post',
+            headerStyle: {
+              backgroundColor: colors.background.light,
+            },
+            headerTitleStyle: {
+              color: colors.text.primary.dark,
+              fontSize: 18,
+              fontWeight: '600',
+            },
+            headerLeft: () => null,
+            headerRight: () => (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={{ paddingRight: 16 }}
+              >
+                <Text style={{ 
+                  color: colors.primary.main, 
+                  fontSize: 16,
+                  fontWeight: '500' 
+                }}>Cancel</Text>
+              </TouchableOpacity>
+            ),
+          }} 
+        />
         
         <Stack.Screen 
           name="create-community" 

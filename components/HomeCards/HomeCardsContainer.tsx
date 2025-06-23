@@ -26,6 +26,10 @@ export const HomeCardsContainer: React.FC = () => {
     console.log('Mood tracking coming soon!');
   };
 
+  const handleGroupChatPress = () => {
+    router.push('/communities');
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -63,9 +67,11 @@ export const HomeCardsContainer: React.FC = () => {
           <HomeCard
             title="Group Chat"
             subtitle="Anonymous group chat"
-            onPress={handleCBTPress}
+            onPress={handleGroupChatPress}
+
             style={styles.card}
           />
+
           <HomeCard
             title="Coming soon"
             subtitle=""
@@ -113,4 +119,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.glass.text.secondary,
   },
-});
+});  
+
