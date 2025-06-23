@@ -61,8 +61,8 @@ export const HomeCardsContainer: React.FC = () => {
         
         <View style={styles.row}>
           <HomeCard
-            title="Coming soon"
-            subtitle=""
+            title="Group Chat"
+            subtitle="Anonymous group chat"
             onPress={handleCBTPress}
             style={styles.card}
           />

@@ -1,8 +1,8 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import GradientBackground from '@/components/Layout/GradientBackground';
+import { colors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { colors } from '../../constants/theme';
 import { supabase } from '../../lib/supabase';
 
 export default function ForgotPasswordScreen() {
@@ -12,10 +12,15 @@ export default function ForgotPasswordScreen() {
   const [message, setMessage] = useState('');
 
   const handleResetPassword = async () => {
+    if (!email.trim()) {
+      alert('Please enter your email address');
+      return;
+    }
+
     try {
       setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'solace://reset-password',
+        redirectTo: 'exp://192.168.1.100:8081/--/(auth)/sign-in',
       });
 
       if (error) throw error;
@@ -34,68 +39,53 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-      <LinearGradient
-        colors={[colors.background.light, colors.primary.main]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.gradient}
-      >
-        <View style={styles.content}>
+    <GradientBackground showHeader={false}>
+      <View style={styles.content}>
+        <View style={styles.headerContainer}>
           <Text style={styles.title}>Reset Password</Text>
           <Text style={styles.subtitle}>
             Enter your email address and we'll send you a link to reset your password
           </Text>
-          <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              placeholderTextColor={colors.ui.muted.light}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            {message ? (
-              <Text style={styles.message}>{message}</Text>
-            ) : null}
-            <TouchableOpacity
-              style={styles.mainButton}
-              onPress={handleResetPassword}
-              disabled={loading}
-            >
-              <Text style={styles.mainButtonText}>
-                {loading ? 'Sending...' : 'Reset Password'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={handleResendCode}
-              disabled={loading}
-            >
-              <Text style={styles.secondaryButtonText}>Resend Code</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Text style={styles.backButtonText}>Back to Login</Text>
-            </TouchableOpacity>
-          </View>
         </View>
-      </LinearGradient>
+        
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email Address"
+            placeholderTextColor={colors.glass.text.placeholder}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+          />
+          {message ? (
+            <Text style={styles.message}>{message}</Text>
+          ) : null}
+          <TouchableOpacity
+            style={[styles.mainButton, loading && styles.mainButtonDisabled]}
+            onPress={handleResetPassword}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.mainButtonText}>
+              {loading ? 'Sending...' : 'Reset Password'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.backButtonText}>← Back to Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.light,
-  },
-  gradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   content: {
     flex: 1,
     justifyContent: 'center',
@@ -103,18 +93,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     width: '100%',
   },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.text.primary.dark,
+    color: colors.text.muted.dark,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: colors.text.primary.dark,
-    marginBottom: 32,
+    color: colors.glass.text.secondary,
     textAlign: 'center',
+    maxWidth: 280,
   },
   form: {
     width: '100%',
@@ -122,55 +116,51 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.glass.inputBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: colors.ui.muted.light,
-    color: colors.text.primary.dark,
+    borderColor: colors.glass.inputBorder,
+    color: colors.glass.text.primary,
   },
   message: {
-    color: colors.primary.main,
+    color: colors.glass.text.primary,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 24,
+    backgroundColor: colors.glass.buttonDefault,
+    padding: 12,
+    borderRadius: 8,
   },
   mainButton: {
-    backgroundColor: colors.text.primary.dark,
+    backgroundColor: colors.glass.buttonDefault,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  mainButtonDisabled: {
+    backgroundColor: colors.glass.buttonDisabled,
+    opacity: 0.6,
   },
   mainButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: colors.primary.main,
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.text.primary.dark,
-    marginBottom: 8,
-  },
-  secondaryButtonText: {
-    color: colors.text.primary.dark,
+    color: colors.glass.text.primary,
     fontSize: 16,
     fontWeight: '600',
   },
   backButton: {
-    padding: 8,
+    padding: 12,
     alignItems: 'center',
+    backgroundColor: colors.glass.overlay,
+    borderRadius: 8,
   },
   backButtonText: {
-    color: colors.text.primary.dark,
+    color: colors.glass.text.secondary,
     fontSize: 14,
     textAlign: 'center',
+    fontWeight: '500',
   },
 }); 

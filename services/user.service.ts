@@ -5,6 +5,7 @@ export interface Profile {
   id: string;
   email: string;
   full_name?: string | null;
+  alias?: string | null;
   avatar_url?: string | null;
   bio?: string | null;
   created_at?: string;
@@ -60,6 +61,8 @@ export class UserService extends BaseService {
       const fullName = authUser.user_metadata?.full_name || 
                       authUser.email?.split('@')[0] || 
                       'User';
+      
+      const alias = authUser.user_metadata?.alias || null;
 
       console.log('Using secure function to create profile...');
 
@@ -67,7 +70,8 @@ export class UserService extends BaseService {
       const { data, error } = await supabase.rpc('create_profile_for_user', {
         user_id: authUser.id,
         user_email: authUser.email!,
-        user_full_name: fullName
+        user_full_name: fullName,
+        user_alias: alias
       });
 
       if (error) {
