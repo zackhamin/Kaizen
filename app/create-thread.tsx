@@ -1,5 +1,6 @@
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
+import { useCreateThread } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -26,8 +27,10 @@ export default function CreateThreadModal() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
   const [loadingCommunity, setLoadingCommunity] = useState(true);
+
+  // Use React Query mutation for creating threads
+  const createThreadMutation = useCreateThread();
 
   useEffect(() => {
     loadCommunity();
@@ -83,21 +86,14 @@ export default function CreateThreadModal() {
     }
 
     try {
-      setLoading(true);
-      
-      await communityService.createThread(
+      await createThreadMutation.mutateAsync({
         communityId,
-        title.trim(),
-        content.trim()
-      );
+        title: title.trim(),
+        content: content.trim()
+      });
 
-      // Success! Go back immediately - real-time will show the new post
+      // Success! Go back to the previous screen
       router.back();
-      
-      // Small delay then navigate to community to see the new post
-      setTimeout(() => {
-        router.push(`/community/${communityId}`);
-      }, 100);
       
     } catch (error: any) {
       console.error('Error creating thread:', error);
@@ -117,8 +113,6 @@ export default function CreateThreadModal() {
       } else {
         Alert.alert('Error', 'Failed to create post. Please try again.');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -188,9 +182,9 @@ export default function CreateThreadModal() {
               styles.postButton,
               { opacity: isPostValid ? 1 : 0.5 }
             ]}
-            disabled={!isPostValid || loading}
+            disabled={!isPostValid || createThreadMutation.isPending}
           >
-            {loading ? (
+            {createThreadMutation.isPending ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.postText}>Post</Text>

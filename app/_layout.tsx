@@ -1,11 +1,24 @@
 // app/_layout.tsx - Add community routes
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router, Stack, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { colors } from '../constants/theme';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null);
@@ -75,119 +88,123 @@ export default function RootLayout() {
   // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={{ 
-          flex: 1, 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          backgroundColor: colors.background.light
-        }}>
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-      </GestureHandlerRootView>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={{ 
+            flex: 1, 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            backgroundColor: colors.background.light
+          }}>
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
     );
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: {
-            backgroundColor: colors.background.light,
-          },
-        }}
-      >
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="gratitude" options={{ headerShown: false }} />
-        
-        {/* Community Routes */}
-        <Stack.Screen name="communities" options={{ headerShown: false }} />
-        <Stack.Screen name="community/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="thread/[id]" options={{ headerShown: false }} />
-        
-        {/* Modal screens */}
-        <Stack.Screen 
-          name="create-thread" 
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-            headerShown: true,
-            headerTitle: 'Create Post',
-            headerStyle: {
+    <QueryClientProvider client={queryClient}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {
               backgroundColor: colors.background.light,
             },
-            headerTitleStyle: {
-              color: colors.text.primary.dark,
-              fontSize: 18,
-              fontWeight: '600',
-            },
-            headerLeft: () => null,
-            headerRight: () => (
-              <TouchableOpacity
-                onPress={() => router.back()}
-                style={{ paddingRight: 16 }}
-              >
-                <Text style={{ 
-                  color: colors.primary.main, 
-                  fontSize: 16,
-                  fontWeight: '500' 
-                }}>Cancel</Text>
-              </TouchableOpacity>
-            ),
-          }} 
-        />
-        
-        <Stack.Screen 
-          name="create-community" 
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-            headerShown: true,
-            headerTitle: 'Create Community',
-            headerStyle: {
-              backgroundColor: colors.background.light,
-            },
-            headerTitleStyle: {
-              color: colors.text.primary.dark,
-              fontSize: 18,
-              fontWeight: '600',
-            },
-            headerLeft: () => null,
-            headerRight: () => (
-              <TouchableOpacity
-                onPress={() => router.back()}
-                style={{ paddingRight: 16 }}
-              >
-                <Text style={{ 
-                  color: colors.primary.main, 
-                  fontSize: 16,
-                  fontWeight: '500' 
-                }}>Cancel</Text>
-              </TouchableOpacity>
-            ),
-          }} 
-        />
-        
-        <Stack.Screen 
-          name="settings" 
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-            headerShown: true,
-            headerTitle: 'Settings',
-            headerStyle: {
-              backgroundColor: colors.background.light,
-            },
-            headerTitleStyle: {
-              color: colors.text.primary.dark,
-              fontSize: 18,
-              fontWeight: '600',
-            },
-          }} 
-        />
-      </Stack>
-    </GestureHandlerRootView>
+          }}
+        >
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="gratitude" options={{ headerShown: false }} />
+          
+          {/* Community Routes */}
+          <Stack.Screen name="communities" options={{ headerShown: false }} />
+          <Stack.Screen name="community/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="thread/[id]" options={{ headerShown: false }} />
+          
+          {/* Modal screens */}
+          <Stack.Screen 
+            name="create-thread" 
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: true,
+              headerTitle: 'Create Post',
+              headerStyle: {
+                backgroundColor: colors.background.light,
+              },
+              headerTitleStyle: {
+                color: colors.text.primary.dark,
+                fontSize: 18,
+                fontWeight: '600',
+              },
+              headerLeft: () => null,
+              headerRight: () => (
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  style={{ paddingRight: 16 }}
+                >
+                  <Text style={{ 
+                    color: colors.primary.main, 
+                    fontSize: 16,
+                    fontWeight: '500' 
+                  }}>Cancel</Text>
+                </TouchableOpacity>
+              ),
+            }} 
+          />
+          
+          <Stack.Screen 
+            name="create-community" 
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: true,
+              headerTitle: 'Create Community',
+              headerStyle: {
+                backgroundColor: colors.background.light,
+              },
+              headerTitleStyle: {
+                color: colors.text.primary.dark,
+                fontSize: 18,
+                fontWeight: '600',
+              },
+              headerLeft: () => null,
+              headerRight: () => (
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  style={{ paddingRight: 16 }}
+                >
+                  <Text style={{ 
+                    color: colors.primary.main, 
+                    fontSize: 16,
+                    fontWeight: '500' 
+                  }}>Cancel</Text>
+                </TouchableOpacity>
+              ),
+            }} 
+          />
+          
+          <Stack.Screen 
+            name="settings" 
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: true,
+              headerTitle: 'Settings',
+              headerStyle: {
+                backgroundColor: colors.background.light,
+              },
+              headerTitleStyle: {
+                color: colors.text.primary.dark,
+                fontSize: 18,
+                fontWeight: '600',
+              },
+            }} 
+          />
+        </Stack>
+      </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }

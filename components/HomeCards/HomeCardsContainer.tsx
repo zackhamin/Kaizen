@@ -41,7 +41,6 @@ export const HomeCardsContainer: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Today's Goals</Text>
       
       <View style={styles.grid}>
         <View style={styles.row}>

@@ -1,8 +1,6 @@
-// app/community/[id].tsx
-import { ConnectionStatus } from '@/components/Chat/ConnectionStatus';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
-import { useRealtimeCommunityThreads, useRealtimeStatus } from '@/hooks/useRealTimeChat';
+import { useCommunityThreads, useCreateThread } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -22,22 +20,24 @@ export default function CommunityDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [community, setCommunity] = useState<Community | null>(null);
-  const [initialThreads, setInitialThreads] = useState<ChatThread[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const { isConnected } = useRealtimeStatus();
   const previousIdRef = useRef<string | null>(null);
 
-  // Use real-time hook for live thread updates - only when we have a valid ID
-  const { threads, isConnected: threadsConnected } = useRealtimeCommunityThreads(
-    id || '', // Pass empty string if id is undefined
-    initialThreads
-  );
+  // Use React Query for community threads
+  const { 
+    data: threads = [], 
+    isLoading, 
+    error, 
+    refetch, 
+    isRefetching 
+  } = useCommunityThreads(id || '');
+
+  // Use React Query mutation for creating threads
+  const createThreadMutation = useCreateThread();
 
   useEffect(() => {
     console.log('Community ID changed:', previousIdRef.current, '->', id);
     
-    // Only load data if the ID actually changed
+    // Only load community data if the ID actually changed
     if (id && id !== previousIdRef.current) {
       previousIdRef.current = id;
       loadCommunityData();
@@ -46,33 +46,22 @@ export default function CommunityDetailScreen() {
 
   const loadCommunityData = async () => {
     try {
-      setLoading(true);
       console.log('Loading community data for ID:', id);
       
-      // Load community info and threads in parallel
-      const [communitiesData, threadsData] = await Promise.all([
-        communityService.getCommunities(),
-        communityService.getCommunityThreads(id!)
-      ]);
-
+      // Load community info
+      const communitiesData = await communityService.getCommunities();
       const communityData = communitiesData.find(c => c.id === id);
       console.log('Found community:', communityData);
-      console.log('Found threads:', threadsData);
       
       setCommunity(communityData || null);
-      setInitialThreads(threadsData); // This will trigger real-time updates
     } catch (error) {
       console.error('Error loading community data:', error);
       Alert.alert('Error', 'Failed to load community data');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadCommunityData();
-    setRefreshing(false);
+  const handleRefresh = () => {
+    refetch();
   };
 
   const handleCreateThread = () => {
@@ -82,16 +71,6 @@ export default function CommunityDetailScreen() {
 
   const handleThreadPress = (thread: ChatThread) => {
     console.log('Thread pressed:', thread.id);
-    // Optimistic update: increment reply count if real-time is not working
-    if (!threadsConnected) {
-      setInitialThreads(prevThreads =>
-        prevThreads.map(t =>
-          t.id === thread.id
-            ? { ...t, reply_count: (t.reply_count || 0) + 1 }
-            : t
-        )
-      );
-    }
     router.push(`/thread/${thread.id}`);
   };
 
@@ -187,7 +166,7 @@ export default function CommunityDetailScreen() {
     </View>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <GradientBackground showHeader={false}>
         <View style={styles.header}>
@@ -236,6 +215,30 @@ export default function CommunityDetailScreen() {
     );
   }
 
+  if (error) {
+    return (
+      <GradientBackground showHeader={false}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{community.name}</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Failed to load threads</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </GradientBackground>
+    );
+  }
+
   const communityStyle = getCommunityStyle(community.name);
 
   return (
@@ -266,14 +269,13 @@ export default function CommunityDetailScreen() {
           <Text style={styles.communityDescription}>
             {community.description}
           </Text>
-          <ConnectionStatus isConnected={isConnected} showWhenConnected={true} />
         </View>
 
         <FlatList
           data={threads}
           renderItem={renderThreadCard}
           keyExtractor={(item) => item.id}
-          refreshing={refreshing}
+          refreshing={isRefetching}
           onRefresh={handleRefresh}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
@@ -494,5 +496,16 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     fontSize: 16,
     color: colors.glass.text.secondary,
+  },
+  retryButton: {
+    backgroundColor: colors.primary.main,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.large,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

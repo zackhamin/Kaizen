@@ -1,75 +1,31 @@
 // app/communities.tsx
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
-import { testRealtimeConnection, useRealtimeCommunities } from '@/hooks/useRealTimeChat';
+import { useCommunities } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     StyleSheet,
     Text,
     TouchableOpacity,
     View
 } from 'react-native';
-import { Community, CommunityService } from '../services/community.service';
-
-const communityService = new CommunityService();
+import { Community } from '../services/community.service';
 
 export default function CommunitiesScreen() {
   const router = useRouter();
-  const [initialCommunities, setInitialCommunities] = useState<Community[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  
+  // Use React Query for communities data
+  const { data: communities = [], isLoading, error, refetch, isRefetching } = useCommunities();
 
-  // Use real-time hook for live community updates
-  const { communities, isConnected, connectionError } = useRealtimeCommunities(initialCommunities);
-
-  useEffect(() => {
-    loadCommunities();
-  }, []);
-
-  const loadCommunities = async () => {
-    try {
-      setLoading(true);
-      const data = await communityService.getCommunities();
-      setInitialCommunities(data); // This will trigger real-time updates
-    } catch (error) {
-      console.error('Error loading communities:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadCommunities();
-    setRefreshing(false);
-  };
-
-  const handleTestRealtime = async () => {
-    console.log('Testing real-time connection...');
-    const result = await testRealtimeConnection();
-    Alert.alert(
-      'Real-time Test',
-      result ? 'Real-time test initiated. Check console logs.' : 'Real-time test failed. Check console logs.',
-      [{ text: 'OK' }]
-    );
+  const handleRefresh = () => {
+    refetch();
   };
 
   const handleCommunityPress = (community: Community) => {
-    // Optimistic update: increment thread count immediately
-    if (!isConnected) {
-      setInitialCommunities(prevCommunities =>
-        prevCommunities.map(c =>
-          c.id === community.id
-            ? { ...c, thread_count: (c.thread_count || 0) + 1 }
-            : c
-        )
-      );
-    }
     router.push(`/community/${community.id}`);
   };
 
@@ -135,7 +91,7 @@ export default function CommunitiesScreen() {
     );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <GradientBackground showHeader={false}>
         <View style={styles.header}>
@@ -152,6 +108,30 @@ export default function CommunitiesScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.glass.text.primary} />
           <Text style={styles.loadingText}>Loading communities...</Text>
+        </View>
+      </GradientBackground>
+    );
+  }
+
+  if (error) {
+    return (
+      <GradientBackground showHeader={false}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Communities</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Failed to load communities</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </GradientBackground>
     );
@@ -175,25 +155,11 @@ export default function CommunitiesScreen() {
           Connect with others anonymously. Share experiences, support each other, and build together.
         </Text>
 
-        {/* Connection Status */}
-        <View style={styles.connectionStatus}>
-          <View style={[styles.statusDot, { backgroundColor: isConnected ? '#10b981' : '#ef4444' }]} />
-          <Text style={styles.statusText}>
-            {isConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
-          </Text>
-          {connectionError && (
-            <Text style={styles.errorText}>Error: {connectionError}</Text>
-          )}
-          <TouchableOpacity style={styles.testButton} onPress={handleTestRealtime}>
-            <Text style={styles.testButtonText}>Test Real-time</Text>
-          </TouchableOpacity>
-        </View>
-
         <FlatList
           data={communities}
           renderItem={renderCommunityCard}
           keyExtractor={(item) => item.id}
-          refreshing={refreshing}
+          refreshing={isRefetching}
           onRefresh={handleRefresh}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
@@ -297,32 +263,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.glass.text.secondary,
   },
-  connectionStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: theme.spacing.sm,
-  },
-  statusText: {
-    fontSize: 14,
-    color: colors.glass.text.secondary,
-    fontWeight: '500',
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#ef4444',
-    marginLeft: theme.spacing.sm,
-  },
-  testButton: {
+  retryButton: {
     padding: theme.spacing.sm,
     marginLeft: theme.spacing.sm,
   },
-  testButtonText: {
+  retryButtonText: {
     fontSize: 14,
     color: colors.glass.text.primary,
     fontWeight: '500',

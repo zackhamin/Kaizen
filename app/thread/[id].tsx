@@ -1,10 +1,9 @@
-import { ConnectionStatus } from '@/components/Chat/ConnectionStatus';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
-import { useRealtimeThreadReplies } from '@/hooks/useRealTimeChat';
+import { useAddReaction, useCreateReply, useThreadDetail } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -17,81 +16,42 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { supabase } from '../../lib/supabase';
-import { ChatReply, ChatThread, CommunityService } from '../../services/community.service';
-
-const communityService = new CommunityService();
+import { ChatReply } from '../../services/community.service';
 
 export default function ThreadDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const flatListRef = useRef<FlatList>(null);
   
-  const [thread, setThread] = useState<ChatThread | null>(null);
-  const [initialReplies, setInitialReplies] = useState<ChatReply[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [replyText, setReplyText] = useState('');
-  const [postingReply, setPostingReply] = useState(false);
-  const [userSession, setUserSession] = useState<any>(null);
 
-  // Use real-time hook for live reply updates
-  const { replies, isConnected } = useRealtimeThreadReplies(id!, initialReplies);
+  // Use React Query for thread data
+  const { 
+    data: threadData, 
+    isLoading, 
+    error, 
+    refetch, 
+    isRefetching 
+  } = useThreadDetail(id || '');
 
-  useEffect(() => {
-    if (id) {
-      loadThreadData();
-    }
-  }, [id]);
+  // Use React Query mutations
+  const createReplyMutation = useCreateReply();
+  const addReactionMutation = useAddReaction();
 
-  // Cache user session to prevent unnecessary auth calls
-  useEffect(() => {
-    const getUserSession = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUserSession(user);
-      } catch (error) {
-        console.error('Error getting user session:', error);
-      }
-    };
-    getUserSession();
-  }, []);
+  const thread = threadData?.thread;
+  const replies = threadData?.replies || [];
 
-  // Debug logging for real-time updates
-  useEffect(() => {
-    console.log('Thread screen - replies count:', replies.length);
-    console.log('Thread screen - isConnected:', isConnected);
-  }, [replies.length, isConnected]);
-
-  // Auto-scroll to bottom when new replies arrive
-  useEffect(() => {
-    if (replies.length > initialReplies.length && !loading) {
-      console.log('Auto-scrolling to new reply - replies:', replies.length, 'initial:', initialReplies.length);
-      // Small delay to ensure the new item is rendered
+  // Auto-scroll to bottom when new replies are added
+  React.useEffect(() => {
+    if (replies.length > 0 && !isLoading) {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
-      }, 300); // Increased delay to ensure real-time update is processed
+      }, 300);
     }
-  }, [replies.length, initialReplies.length, loading]);
+  }, [replies.length, isLoading]);
 
-  const loadThreadData = async () => {
-    try {
-      setLoading(true);
-      const data = await communityService.getThreadDetail(id!);
-      setThread(data.thread);
-      setInitialReplies(data.replies); // This will trigger real-time updates
-    } catch (error) {
-      console.error('Error loading thread data:', error);
-      Alert.alert('Error', 'Failed to load thread');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadThreadData();
-    setRefreshing(false);
+  const handleRefresh = () => {
+    refetch();
   };
 
   const handlePostReply = async () => {
@@ -105,22 +65,16 @@ export default function ThreadDetailScreen() {
       return;
     }
 
-    console.log('Posting reply - current replies count:', replies.length);
-    console.log('Posting reply - connection status:', isConnected);
-
     try {
-      setPostingReply(true);
-      
       // Clear input immediately for better UX
       const currentReplyText = replyText.trim();
       setReplyText('');
       
-      // Actually post the reply - real-time will handle the UI update
-      const newReply = await communityService.createReply(id, currentReplyText);
-      console.log('Reply created successfully:', newReply.id);
-      
-      // Don't manually scroll here - let the real-time auto-scroll handle it
-      // The real-time update will trigger the useEffect above
+      // Post the reply using React Query mutation
+      await createReplyMutation.mutateAsync({
+        threadId: id,
+        content: currentReplyText
+      });
       
     } catch (error: any) {
       console.error('Error posting reply:', error);
@@ -140,48 +94,18 @@ export default function ThreadDetailScreen() {
       } else {
         Alert.alert('Error', 'Failed to post reply. Please try again.');
       }
-    } finally {
-      setPostingReply(false);
     }
   };
 
   const handleReaction = async (contentType: 'thread' | 'reply', contentId: string, reactionType: string) => {
     try {
-      // Optimistic update for immediate UI feedback
-      if (contentType === 'thread' && thread) {
-        setThread(prev => prev ? {
-          ...prev,
-          reaction_count: (prev.reaction_count || 0) + 1
-        } : null);
-      } else if (contentType === 'reply') {
-        setInitialReplies(prev => prev.map(reply => 
-          reply.id === contentId 
-            ? { ...reply, reaction_count: (reply.reaction_count || 0) + 1 }
-            : reply
-        ));
-      }
-
-      // Actually add the reaction
-      await communityService.addReaction(contentType, contentId, reactionType);
-      
-      // Note: Real-time updates will handle the actual count updates
-      // We don't need to manually refresh here
+      await addReactionMutation.mutateAsync({
+        contentType,
+        contentId,
+        reactionType
+      });
     } catch (error) {
       console.error('Error adding reaction:', error);
-      
-      // Revert optimistic update on error
-      if (contentType === 'thread' && thread) {
-        setThread(prev => prev ? {
-          ...prev,
-          reaction_count: Math.max(0, (prev.reaction_count || 0) - 1)
-        } : null);
-      } else if (contentType === 'reply') {
-        setInitialReplies(prev => prev.map(reply => 
-          reply.id === contentId 
-            ? { ...reply, reaction_count: Math.max(0, (reply.reaction_count || 0) - 1) }
-            : reply
-        ));
-      }
     }
   };
 
@@ -249,48 +173,32 @@ export default function ThreadDetailScreen() {
   };
 
   const renderReply = ({ item: reply }: { item: ChatReply }) => {
-    const isOptimistic = reply.id.startsWith('temp-');
-    
     return (
-      <View style={[
-        styles.replyContainer,
-        isOptimistic && styles.optimisticReply
-      ]}>
+      <View style={styles.replyContainer}>
         <View style={styles.replyHeader}>
           <Text style={styles.replyAuthor}>u/{reply.alias_username}</Text>
           <Text style={styles.separator}>•</Text>
           <Text style={styles.replyTime}>{formatTimeAgo(reply.created_at)}</Text>
-          {isOptimistic && (
-            <View style={styles.sendingIndicator}>
-              <ActivityIndicator size="small" color={colors.glass.text.muted} />
-              <Text style={styles.sendingText}>Sending...</Text>
-            </View>
-          )}
         </View>
         
-        <Text style={[
-          styles.replyContent,
-          isOptimistic && styles.optimisticText
-        ]}>
+        <Text style={styles.replyContent}>
           {reply.content}
         </Text>
         
-        {!isOptimistic && (
-          <View style={styles.replyActions}>
-            <TouchableOpacity 
-              style={styles.replyActionButton}
-              onPress={() => handleReaction('reply', reply.id, 'upvote')}
-            >
-              <Ionicons name="arrow-up" size={14} color={colors.glass.text.secondary} />
-              <Text style={styles.replyActionText}>{reply.reaction_count || 0}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.replyActionButton}>
-              <Ionicons name="chatbubble-outline" size={14} color={colors.glass.text.secondary} />
-              <Text style={styles.replyActionText}>Reply</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.replyActions}>
+          <TouchableOpacity 
+            style={styles.replyActionButton}
+            onPress={() => handleReaction('reply', reply.id, 'upvote')}
+          >
+            <Ionicons name="arrow-up" size={14} color={colors.glass.text.secondary} />
+            <Text style={styles.replyActionText}>{reply.reaction_count || 0}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.replyActionButton}>
+            <Ionicons name="chatbubble-outline" size={14} color={colors.glass.text.secondary} />
+            <Text style={styles.replyActionText}>Reply</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -312,9 +220,9 @@ export default function ThreadDetailScreen() {
           { opacity: replyText.trim() ? 1 : 0.5 }
         ]}
         onPress={handlePostReply}
-        disabled={!replyText.trim() || postingReply}
+        disabled={!replyText.trim() || createReplyMutation.isPending}
       >
-        {postingReply ? (
+        {createReplyMutation.isPending ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
           <Ionicons name="send" size={16} color="#fff" />
@@ -323,7 +231,7 @@ export default function ThreadDetailScreen() {
     </View>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <GradientBackground showHeader={false}>
         <View style={styles.header}>
@@ -340,6 +248,30 @@ export default function ThreadDetailScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.glass.text.primary} />
           <Text style={styles.loadingText}>Loading thread...</Text>
+        </View>
+      </GradientBackground>
+    );
+  }
+
+  if (error) {
+    return (
+      <GradientBackground showHeader={false}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Error</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Failed to load thread</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </GradientBackground>
     );
@@ -381,7 +313,6 @@ export default function ThreadDetailScreen() {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Discussion</Text>
-            <ConnectionStatus isConnected={isConnected} />
           </View>
           <View style={styles.headerSpacer} />
         </View>
@@ -392,7 +323,7 @@ export default function ThreadDetailScreen() {
           renderItem={renderReply}
           keyExtractor={(item) => item.id}
           ListHeaderComponent={renderThreadHeader}
-          refreshing={refreshing}
+          refreshing={isRefetching}
           onRefresh={handleRefresh}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
@@ -521,11 +452,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.glass.overlayBorder,
   },
-  optimisticReply: {
-    opacity: 0.7,
-    borderColor: colors.primary.main,
-    borderWidth: 1,
-  },
   replyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -540,25 +466,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.glass.text.secondary,
   },
-  sendingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 'auto',
-    gap: 4,
-  },
-  sendingText: {
-    fontSize: 10,
-    color: colors.glass.text.muted,
-    fontStyle: 'italic',
-  },
   replyContent: {
     fontSize: 14,
     color: colors.glass.text.primary,
     lineHeight: 20,
     marginBottom: theme.spacing.md,
-  },
-  optimisticText: {
-    opacity: 0.8,
   },
   replyActions: {
     flexDirection: 'row',
@@ -613,5 +525,16 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     fontSize: 16,
     color: colors.glass.text.secondary,
+  },
+  retryButton: {
+    backgroundColor: colors.primary.main,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.large,
+    marginTop: theme.spacing.sm,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

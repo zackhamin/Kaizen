@@ -1,29 +1,28 @@
-import { GratitudeProvider } from '@/app/context/GratitudeContext';
-import { HomeCardsContainer, HorizontalCalendar } from '@/components';
+import { DailyGoals, HomeCardsContainer, HorizontalCalendar } from '@/components';
 import { QuoteCard } from '@/components/Cards';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
   return (
-    <GratitudeProvider>
-      <GradientBackground showHeader={false}>
-        <View style={styles.container}>
-          <View style={styles.scaleContainer}> 
-            <HorizontalCalendar onDateChange={(date) => {console.log('date changed', date)}} />
-          </View>
-          
-          <HomeCardsContainer />
-          
-          <View style={styles.quoteContainer}>
-            <QuoteCard transparent={true} quote="Forget perfection. Just aim to be 1% better than yesterday." />
-          </View>
-          <View style={styles.questionContainer}>
-            {/* <QuestionCard question="How are you feeling today?" onValueChange={(value) => {console.log('value changed', value)}} />  */}
-          </View>
+    <GradientBackground showHeader={false}>
+      <View style={styles.container}>
+        <View style={styles.scaleContainer}> 
+          <HorizontalCalendar onDateChange={(date) => {console.log('date changed', date)}} />
         </View>
-      </GradientBackground>
-    </GratitudeProvider>
+        
+        <DailyGoals />
+        
+        <HomeCardsContainer />
+        
+        <View style={styles.quoteContainer}>
+          <QuoteCard transparent={true} quote="Forget perfection. Just aim to be 1% better than yesterday." />
+        </View>
+        <View style={styles.questionContainer}>
+          {/* <QuestionCard question="How are you feeling today?" onValueChange={(value) => {console.log('value changed', value)}} />  */}
+        </View>
+      </View>
+    </GradientBackground>
   );
 }
 

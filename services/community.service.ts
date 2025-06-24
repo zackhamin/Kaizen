@@ -369,34 +369,4 @@ export class CommunityService extends BaseService {
       throw error;
     }
   }
-
-  // Subscribe to real-time updates for a community
-  subscribeToThreadUpdates(communityId: string, callback: (thread: ChatThread) => void) {
-    return supabase
-      .channel(`community-${communityId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'chat_threads',
-        filter: `community_id=eq.${communityId}`
-      }, (payload) => {
-        callback(payload.new as ChatThread);
-      })
-      .subscribe();
-  }
-
-  // Subscribe to real-time updates for a thread
-  subscribeToReplyUpdates(threadId: string, callback: (reply: ChatReply) => void) {
-    return supabase
-      .channel(`thread-${threadId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'chat_replies',
-        filter: `thread_id=eq.${threadId}`
-      }, (payload) => {
-        callback(payload.new as ChatReply);
-      })
-      .subscribe();
-  }
 }
