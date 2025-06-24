@@ -1,27 +1,28 @@
+import { useGratitudeData } from '@/app/context/GratitudeContext';
 import { colors } from '@/constants/theme';
 import { GratitudeEntry, GratitudeService } from '@/services/gratitude.service';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Animated, {
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSequence,
-    withSpring,
-    withTiming,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import GradientBackground from '../Layout/GradientBackground';
 
@@ -99,6 +100,9 @@ const Gratitude: React.FC = () => {
   const [hasShownAnimation, setHasShownAnimation] = useState(false);
   const router = useRouter();
 
+  // Get context methods to update daily goals
+  const { updateGratitudeCount } = useGratitudeData();
+
   useEffect(() => {
     loadGratitudeEntries();
   }, []);
@@ -116,6 +120,9 @@ const Gratitude: React.FC = () => {
       setLoading(true);
       const entries = await gratitudeService.getCurrentUserGratitudeEntries();
       setGratitudeEntries(entries);
+      
+      // Update context with current gratitude count
+      updateGratitudeCount(entries.length);
       
       // Reset animation state when loading entries (e.g., on refresh)
       if (entries.length < 3) {
@@ -147,6 +154,8 @@ const Gratitude: React.FC = () => {
       
       setGratitudeEntries(prevEntries => {
         const updatedEntries = [newEntry, ...prevEntries];
+        // Update context with new gratitude count
+        updateGratitudeCount(updatedEntries.length);
         return updatedEntries;
       });
       setInputText('');
@@ -172,6 +181,8 @@ const Gratitude: React.FC = () => {
               await gratitudeService.deleteGratitudeEntry(id);
               setGratitudeEntries(prevEntries => {
                 const updatedEntries = prevEntries.filter(entry => entry.id !== id);
+                // Update context with new gratitude count
+                updateGratitudeCount(updatedEntries.length);
                 // Reset animation state if entries drop below 3
                 if (updatedEntries.length < 3) {
                   setHasShownAnimation(false);

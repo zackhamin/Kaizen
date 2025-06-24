@@ -1,3 +1,4 @@
+import { useGratitudeData } from '@/app/context/GratitudeContext';
 import { colors } from '@/constants/theme';
 import { Task, TaskService } from '@/services/task.service';
 import React, { useEffect, useState } from 'react';
@@ -26,6 +27,9 @@ const Todos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [addingTask, setAddingTask] = useState(false);
 
+  // Get context methods to update daily goals
+  const { updateTaskCounts } = useGratitudeData();
+
   useEffect(() => {
     loadTasks();
   }, []);
@@ -35,6 +39,10 @@ const Todos: React.FC = () => {
       setLoading(true);
       const tasks = await taskService.getCurrentUserTasks();
       setTodos(tasks);
+      
+      // Update context with current task counts
+      const completedCount = tasks.filter(task => task.completed).length;
+      updateTaskCounts(tasks.length, completedCount);
     } catch (error) {
       console.error('Error loading tasks:', error);
       Alert.alert('Error', 'Failed to load tasks');
@@ -49,8 +57,13 @@ const Todos: React.FC = () => {
     try {
       setAddingTask(true);
       const newTask = await taskService.createTask(inputText.trim());
-      setTodos([newTask, ...todos]);
+      const updatedTodos = [newTask, ...todos];
+      setTodos(updatedTodos);
       setInputText('');
+      
+      // Update context with new task counts
+      const completedCount = updatedTodos.filter(task => task.completed).length;
+      updateTaskCounts(updatedTodos.length, completedCount);
     } catch (error) {
       console.error('Error adding task:', error);
       Alert.alert('Error', 'Failed to add task');
@@ -62,9 +75,14 @@ const Todos: React.FC = () => {
   const toggleTodo = async (id: string): Promise<void> => {
     try {
       const updatedTask = await taskService.toggleTask(id);
-      setTodos(todos.map(todo =>
+      const updatedTodos = todos.map(todo =>
         todo.id === id ? updatedTask : todo
-      ));
+      );
+      setTodos(updatedTodos);
+      
+      // Update context with new task counts
+      const completedCount = updatedTodos.filter(task => task.completed).length;
+      updateTaskCounts(updatedTodos.length, completedCount);
     } catch (error) {
       console.error('Error toggling task:', error);
       Alert.alert('Error', 'Failed to update task');
@@ -74,7 +92,12 @@ const Todos: React.FC = () => {
   const deleteTodo = async (id: string): Promise<void> => {
     try {
       await taskService.softDeleteTask(id);
-      setTodos(todos.filter(todo => todo.id !== id));
+      const updatedTodos = todos.filter(todo => todo.id !== id);
+      setTodos(updatedTodos);
+      
+      // Update context with new task counts
+      const completedCount = updatedTodos.filter(task => task.completed).length;
+      updateTaskCounts(updatedTodos.length, completedCount);
     } catch (error) {
       console.error('Error deleting task:', error);
       Alert.alert('Error', 'Failed to delete task');

@@ -1,5 +1,6 @@
 export * from './Calendar';
 export * from './Cards';
+export * from './DailyGoals';
 export * from './Gratitude';
 export * from './HomeCards';
 export * from './HorizontalCalendar';

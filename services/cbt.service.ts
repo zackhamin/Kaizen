@@ -1,4 +1,3 @@
-// services/cbt.service.ts
 import { supabase } from '@/lib/supabase';
 
 export interface Message {

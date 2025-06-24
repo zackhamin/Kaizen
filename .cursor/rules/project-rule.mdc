@@ -1,0 +1,246 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor AI Project Rules - Solace App
+
+## Project Overview
+Solace is a React Native app built with Expo Router for men's mental health and productivity. The app focuses on anonymous peer support, CBT tools, gratitude tracking, and community features.
+
+## Technology Stack
+- **Framework**: React Native with Expo (~53.0.9)
+- **Router**: Expo Router (~5.0.6) with file-based routing
+- **Database**: Supabase (PostgreSQL with real-time features)
+- **State Management**: React hooks and context
+- **Styling**: StyleSheet with custom theme system
+- **Icons**: @expo/vector-icons (Ionicons, MaterialIcons)
+
+## File Structure & Naming Conventions
+
+### Directory Structure
+```
+app/
+├── (auth)/           # Auth-protected routes
+├── (tabs)/           # Tab navigation routes
+├── context/          # React context providers
+├── _layout.tsx       # Root layout
+components/
+├── Cards/            # Reusable card components
+├── HomeCards/        # Home screen specific cards
+├── Layout/           # Layout wrapper components
+├── Modals/           # Modal components
+├── Todos/            # Task/wins components
+constants/
+├── theme.ts          # Global theme configuration
+services/
+├── *.service.ts      # API service layers
+lib/
+├── supabase.ts       # Supabase client configuration
+```
+
+### Naming Conventions
+- **Files**: PascalCase for components, kebab-case for screens (e.g., `HomeCard.tsx`, `sign-in.tsx`)
+- **Components**: PascalCase (e.g., `HomeCardsContainer`)
+- **Variables**: camelCase (e.g., `gratitudeCount`, `isLoading`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `THEME_COLORS`)
+- **Database**: snake_case tables and columns (e.g., `chat_threads`, `user_id`)
+
+## Design System & Styling
+
+### Theme Usage
+Always import and use the theme system:
+```typescript
+import { colors, theme } from '@/constants/theme';
+```
+
+### Glass Morphism Design
+- Primary colors: `colors.glass.*` for backgrounds
+- Text colors: `colors.glass.text.*`
+- Consistent border radius: `theme.borderRadius.*`
+- Spacing: `theme.spacing.*` (xs, sm, md, lg, xl, xxl)
+
+### Component Structure
+```typescript
+// Standard component template
+import { colors, theme } from '@/constants/theme';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+
+interface ComponentProps {
+  // Props interface always defined
+}
+
+export const ComponentName: React.FC<ComponentProps> = ({ 
+  // Destructured props
+}) => {
+  return (
+    <View style={styles.container}>
+      {/* Component content */}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    // Styles using theme constants
+  },
+});
+```
+
+## Routing Conventions
+
+### Expo Router Patterns
+- Use `router.push()` for navigation
+- Use `router.replace()` for auth redirects
+- Modal screens defined in root `_layout.tsx`
+- Tab screens in `(tabs)/` directory
+
+### Navigation Examples
+```typescript
+import { useRouter } from 'expo-router';
+
+const router = useRouter();
+
+// Standard navigation
+router.push('/communities');
+
+// Tab navigation
+router.push('/(tabs)/cbt');
+
+// Modal presentation
+router.push('/settings'); // Configured as modal in _layout.tsx
+```
+
+## Database & Services
+
+### Service Layer Pattern
+- All database interactions through service classes
+- Inherit from `BaseService` when possible
+- Use TypeScript interfaces for data types
+- Handle errors consistently
+
+```typescript
+// Service example
+export class CommunityService extends BaseService {
+  constructor() {
+    super('communities');
+  }
+
+  async getCommunities(): Promise<Community[]> {
+    // Implementation
+  }
+}
+```
+
+### Supabase Patterns
+- Use Row Level Security (RLS) policies
+- Real-time subscriptions for live updates
+- Secure functions for complex operations
+
+## Component Guidelines
+
+### Props & Interfaces
+- Always define TypeScript interfaces for props
+- Use optional props with default values when appropriate
+- Destructure props in component parameters
+
+### State Management
+- Use `useState` for local component state
+- Use Context for shared state across components
+- Implement loading states consistently
+
+### Error Handling
+- Always wrap async operations in try-catch
+- Show user-friendly error messages
+- Log errors for debugging: `console.error('Context:', error)`
+
+## Anonymous Chat Feature Conventions
+
+### User Identity
+- Store `alias_username` consistently across tables
+- Never expose real user information in chat
+- Use `profiles.alias` for persistent anonymous identity
+
+### Real-time Features
+- Use Supabase subscriptions for live chat
+- Implement optimistic updates for better UX
+- Handle connection states gracefully
+
+## Performance Guidelines
+
+### React Query (When Implemented)
+- Cache community and thread data
+- Invalidate queries on mutations
+- Use background refetch for fresh data
+
+### Optimization
+- Use `React.memo` for expensive components
+- Implement lazy loading for large lists
+- Optimize images with Expo Image
+
+## Security Guidelines
+
+### Data Protection
+- Never log sensitive user data
+- Use RLS policies for all database access
+- Validate inputs on both client and server
+
+### Anonymous Features
+- Ensure true anonymity in chat features
+- Don't correlate anonymous actions with real identity
+- Implement content moderation for safety
+
+## Testing Conventions
+
+### Manual Testing Checklist
+- Test on both iOS and Android
+- Verify offline/poor connection handling
+- Test auth flows thoroughly
+- Validate anonymous identity consistency
+
+## Code Quality
+
+### TypeScript
+- Enable strict mode
+- Define interfaces for all data structures
+- Use union types for strict type safety
+
+### Consistency
+- Follow existing patterns in the codebase
+- Use same import order: React, React Native, third-party, local
+- Maintain consistent error handling patterns
+
+### Comments
+- Comment complex logic and business rules
+- Document service methods with JSDoc
+- Explain mental health specific considerations
+
+## Mental Health Considerations
+
+### UX Priorities
+- Reduce friction for vulnerable users
+- Clear, supportive messaging
+- Crisis intervention handling
+- Anonymous support emphasis
+
+### Content Moderation
+- Flag crisis-related content
+- Implement reporting systems
+- Maintain supportive community standards
+
+## Development Workflow
+
+### Branch Naming
+- `feature/anonymous-chat`
+- `fix/auth-issue`
+- `refactor/theme-system`
+
+### Commit Messages
+- Use conventional commits
+- Be descriptive about mental health features
+- Reference issues when applicable
+
+---
+
+**Remember**: This app serves men seeking mental health support. Every feature should reduce barriers and provide genuine value during vulnerable moments.

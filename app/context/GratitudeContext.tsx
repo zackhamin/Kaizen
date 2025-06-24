@@ -1,6 +1,7 @@
 import { GratitudeService } from '@/services/gratitude.service';
 import { TaskService } from '@/services/task.service';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 interface GratitudeData {
   gratitudeCount: number;
@@ -8,6 +9,8 @@ interface GratitudeData {
   completedTasksCount: number;
   isLoading: boolean;
   refreshData: () => Promise<void>;
+  updateGratitudeCount: (count: number) => void;
+  updateTaskCounts: (total: number, completed: number) => void;
 }
 
 const GratitudeContext = createContext<GratitudeData | undefined>(undefined);
@@ -60,6 +63,23 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
     await loadData();
   };
 
+  const updateGratitudeCount = (count: number) => {
+    setGratitudeCount(count);
+  };
+
+  const updateTaskCounts = (total: number, completed: number) => {
+    setTasksCount(total);
+    setCompletedTasksCount(completed);
+  };
+
+  // Refresh data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Home screen focused, refreshing gratitude data');
+      loadData();
+    }, [])
+  );
+
   useEffect(() => {
     loadData();
   }, []);
@@ -70,6 +90,8 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
     completedTasksCount,
     isLoading,
     refreshData,
+    updateGratitudeCount,
+    updateTaskCounts,
   };
 
   return (
