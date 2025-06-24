@@ -1,7 +1,7 @@
-import { GratitudeService } from '@/services/gratitude.service';
-import { TaskService } from '@/services/task.service';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useGratitude } from '../hooks/useGratitude';
+import { useTasks } from '../hooks/useTasks';
 
 interface GratitudeData {
   gratitudeCount: number;
@@ -33,19 +33,22 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
   const [completedTasksCount, setCompletedTasksCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const gratitudeService = new GratitudeService();
-  const taskService = new TaskService();
+  // Use the modern hooks
+  const { gratitudeEntries, loading: gratitudeLoading, refreshGratitudeEntries } = useGratitude();
+  const { tasks, loading: tasksLoading, refreshTasks } = useTasks();
 
   const loadData = async () => {
     try {
       setIsLoading(true);
       
-      // Load gratitude entries for today
-      const gratitudeEntries = await gratitudeService.getCurrentUserGratitudeEntries();
-      setGratitudeCount(gratitudeEntries.length);
+      // Refresh both gratitude and tasks data
+      await Promise.all([
+        refreshGratitudeEntries(),
+        refreshTasks()
+      ]);
       
-      // Load tasks
-      const tasks = await taskService.getCurrentUserTasks();
+      // Update counts from the hooks' state
+      setGratitudeCount(gratitudeEntries.length);
       setTasksCount(tasks.length);
       setCompletedTasksCount(tasks.filter(task => task.completed).length);
     } catch (error) {
@@ -72,6 +75,18 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
     setCompletedTasksCount(completed);
   };
 
+  // Update counts when hooks data changes
+  useEffect(() => {
+    console.log('GratitudeContext: Updating gratitude count from hook data:', gratitudeEntries.length);
+    setGratitudeCount(gratitudeEntries.length);
+  }, [gratitudeEntries]);
+
+  useEffect(() => {
+    console.log('GratitudeContext: Updating task counts from hook data:', tasks.length, 'completed:', tasks.filter(task => task.completed).length);
+    setTasksCount(tasks.length);
+    setCompletedTasksCount(tasks.filter(task => task.completed).length);
+  }, [tasks]);
+
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -81,14 +96,20 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
   );
 
   useEffect(() => {
+    console.log('GratitudeContext: Initial load triggered');
     loadData();
   }, []);
+
+  // Debug effect to log context value changes
+  useEffect(() => {
+    console.log('GratitudeContext: Context value updated - gratitudeCount:', gratitudeCount, 'tasksCount:', tasksCount, 'completedTasksCount:', completedTasksCount);
+  }, [gratitudeCount, tasksCount, completedTasksCount]);
 
   const value: GratitudeData = {
     gratitudeCount,
     tasksCount,
     completedTasksCount,
-    isLoading,
+    isLoading: isLoading || gratitudeLoading || tasksLoading,
     refreshData,
     updateGratitudeCount,
     updateTaskCounts,

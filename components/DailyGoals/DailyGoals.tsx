@@ -1,7 +1,7 @@
 import { useGratitudeData } from '@/app/context/GratitudeContext';
 import { colors, theme } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface DailyGoal {
@@ -14,20 +14,27 @@ interface DailyGoal {
 export const DailyGoals: React.FC = () => {
   const { gratitudeCount, completedTasksCount } = useGratitudeData();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('DailyGoals: Received context update - gratitudeCount:', gratitudeCount, 'completedTasksCount:', completedTasksCount);
+  }, [gratitudeCount, completedTasksCount]);
+
   const goals: DailyGoal[] = [
     {
       id: 'gratitude',
       text: 'Complete the gratitude page',
-      isCompleted: gratitudeCount > 0,
+      isCompleted: gratitudeCount >= 3,
       icon: 'heart'
     },
     {
       id: 'task',
       text: 'Complete 1 task from the Wins list',
-      isCompleted: completedTasksCount > 0,
+      isCompleted: completedTasksCount >= 1,
       icon: 'checkmark-circle'
     }
   ];
+
+  console.log('DailyGoals: Rendering with goals:', goals.map(g => ({ id: g.id, isCompleted: g.isCompleted })));
 
   const renderGoal = (goal: DailyGoal) => (
     <View key={goal.id} style={styles.goalItem}>
@@ -51,7 +58,7 @@ export const DailyGoals: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Daily Goals</Text>
+      <Text style={styles.title}>Daily Tasks</Text>
       <View style={styles.goalsList}>
         {goals.map(renderGoal)}
       </View>

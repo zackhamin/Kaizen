@@ -1,6 +1,6 @@
 import { useGratitudeData } from '@/app/context/GratitudeContext';
+import { useTasks } from '@/app/hooks/useTasks';
 import { colors } from '@/constants/theme';
-import { Task, TaskService } from '@/services/task.service';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,51 +19,37 @@ import GradientBackground from '../Layout/GradientBackground';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const taskService = new TaskService();
-
 const Todos: React.FC = () => {
-  const [todos, setTodos] = useState<Task[]>([]);
   const [inputText, setInputText] = useState<string>('');
-  const [loading, setLoading] = useState(true);
   const [addingTask, setAddingTask] = useState(false);
+
+  // Use the modern hook
+  const { 
+    tasks: todos, 
+    loading, 
+    error, 
+    addTask, 
+    toggleTask, 
+    deleteTask, 
+    refreshTasks 
+  } = useTasks();
 
   // Get context methods to update daily goals
   const { updateTaskCounts } = useGratitudeData();
 
+  // Update context when tasks change
   useEffect(() => {
-    loadTasks();
-  }, []);
+    const completedCount = todos.filter(task => task.completed).length;
+    updateTaskCounts(todos.length, completedCount);
+  }, [todos, updateTaskCounts]);
 
-  const loadTasks = async () => {
-    try {
-      setLoading(true);
-      const tasks = await taskService.getCurrentUserTasks();
-      setTodos(tasks);
-      
-      // Update context with current task counts
-      const completedCount = tasks.filter(task => task.completed).length;
-      updateTaskCounts(tasks.length, completedCount);
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-      Alert.alert('Error', 'Failed to load tasks');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addTodo = async (): Promise<void> => {
+  const handleAddTodo = async (): Promise<void> => {
     if (!inputText.trim()) return;
 
     try {
       setAddingTask(true);
-      const newTask = await taskService.createTask(inputText.trim());
-      const updatedTodos = [newTask, ...todos];
-      setTodos(updatedTodos);
+      await addTask(inputText.trim());
       setInputText('');
-      
-      // Update context with new task counts
-      const completedCount = updatedTodos.filter(task => task.completed).length;
-      updateTaskCounts(updatedTodos.length, completedCount);
     } catch (error) {
       console.error('Error adding task:', error);
       Alert.alert('Error', 'Failed to add task');
@@ -72,53 +58,52 @@ const Todos: React.FC = () => {
     }
   };
 
-  const toggleTodo = async (id: string): Promise<void> => {
+  const handleToggleTodo = async (id: string): Promise<void> => {
     try {
-      const updatedTask = await taskService.toggleTask(id);
-      const updatedTodos = todos.map(todo =>
-        todo.id === id ? updatedTask : todo
-      );
-      setTodos(updatedTodos);
-      
-      // Update context with new task counts
-      const completedCount = updatedTodos.filter(task => task.completed).length;
-      updateTaskCounts(updatedTodos.length, completedCount);
+      await toggleTask(id);
     } catch (error) {
       console.error('Error toggling task:', error);
       Alert.alert('Error', 'Failed to update task');
     }
   };
 
-  const deleteTodo = async (id: string): Promise<void> => {
-    try {
-      await taskService.softDeleteTask(id);
-      const updatedTodos = todos.filter(todo => todo.id !== id);
-      setTodos(updatedTodos);
-      
-      // Update context with new task counts
-      const completedCount = updatedTodos.filter(task => task.completed).length;
-      updateTaskCounts(updatedTodos.length, completedCount);
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      Alert.alert('Error', 'Failed to delete task');
-    }
+  const handleDeleteTodo = async (id: string): Promise<void> => {
+    Alert.alert(
+      'Delete Task',
+      'Are you sure you want to delete this task?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteTask(id);
+            } catch (error) {
+              console.error('Error deleting task:', error);
+              Alert.alert('Error', 'Failed to delete task');
+            }
+          }
+        }
+      ]
+    );
   };
 
-  const remainingTodos: number = todos.filter(todo => !todo.completed).length;
+  const remainingTasks = todos.filter(task => !task.completed).length;
 
-  const renderTodoItem = ({ item }: { item: Task }) => (
-    <View style={styles.todoItem}>
+  const renderTaskItem = ({ item }: { item: any }) => (
+    <View style={styles.taskItem}>
       <TouchableOpacity
         style={[styles.checkbox, item.completed && styles.checkboxChecked]}
-        onPress={() => toggleTodo(item.id)}
+        onPress={() => handleToggleTodo(item.id)}
         activeOpacity={0.7}
       >
         {item.completed && <Text style={styles.checkmark}>✓</Text>}
       </TouchableOpacity>
       <Text 
         style={[
-          styles.todoText, 
-          item.completed && styles.todoTextCompleted
+          styles.taskText, 
+          item.completed && styles.taskTextCompleted
         ]}
         numberOfLines={0}
       >
@@ -126,7 +111,7 @@ const Todos: React.FC = () => {
       </Text>
       <TouchableOpacity
         style={styles.deleteButton}
-        onPress={() => deleteTodo(item.id)}
+        onPress={() => handleDeleteTodo(item.id)}
         activeOpacity={0.7}
       >
         <Text style={styles.deleteButtonText}>×</Text>
@@ -162,14 +147,14 @@ const Todos: React.FC = () => {
               placeholderTextColor="rgba(255, 255, 255, 0.6)"
               value={inputText}
               onChangeText={setInputText}
-              onSubmitEditing={addTodo}
+              onSubmitEditing={handleAddTodo}
               returnKeyType="done"
               multiline={false}
               editable={!addingTask}
             />
             <TouchableOpacity 
               style={[styles.addButton, addingTask && styles.addButtonDisabled]} 
-              onPress={addTodo}
+              onPress={handleAddTodo}
               activeOpacity={0.8}
               disabled={addingTask}
             >
@@ -183,17 +168,17 @@ const Todos: React.FC = () => {
 
           <FlatList
             data={todos}
-            renderItem={renderTodoItem}
+            renderItem={renderTaskItem}
             keyExtractor={(item) => item.id}
-            style={styles.todoList}
-            contentContainerStyle={styles.todoListContent}
+            style={styles.taskList}
+            contentContainerStyle={styles.taskListContent}
             showsVerticalScrollIndicator={false}
             refreshing={loading}
-            onRefresh={loadTasks}
+            onRefresh={refreshTasks}
           />
 
           <Text style={styles.remainingText}>
-            Your remaining todos: {remainingTodos}
+            Your remaining tasks: {remainingTasks}
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -261,60 +246,52 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   addButtonText: {
-    color: colors.accent.white,
     fontSize: 24,
+    color: colors.accent.white,
     fontWeight: 'bold',
-    lineHeight: 24,
   },
-  todoList: {
+  taskList: {
     flex: 1,
-    width: '100%',
   },
-  todoListContent: {
+  taskListContent: {
     paddingBottom: 20,
   },
-  todoItem: {
+  taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
-    borderRadius: 8,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   checkboxChecked: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderColor: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: colors.accent.copper,
+    borderColor: colors.accent.copper,
   },
   checkmark: {
     color: colors.accent.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
-  todoText: {
+  taskText: {
     flex: 1,
     fontSize: 16,
     color: colors.accent.white,
-    lineHeight: 24,
+    lineHeight: 22,
   },
-  todoTextCompleted: {
+  taskTextCompleted: {
     textDecorationLine: 'line-through',
     color: 'rgba(255, 255, 255, 0.6)',
   },
@@ -322,23 +299,23 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
+    marginLeft: 12,
   },
   deleteButtonText: {
-    color: colors.accent.white,
+    color: '#ff6b6b',
     fontSize: 18,
     fontWeight: 'bold',
-    lineHeight: 18,
   },
   remainingText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
+    color: colors.accent.white,
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 20,
+    opacity: 0.8,
   },
 });
 
-export default Todos;
+export default Todos; 
