@@ -1,4 +1,6 @@
+import { supabase } from '@/lib/supabase';
 import { useFocusEffect } from '@react-navigation/native';
+import { Session } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useGratitude } from '../hooks/useGratitude';
 import { useTasks } from '../hooks/useTasks';
@@ -32,13 +34,14 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
   const [tasksCount, setTasksCount] = useState(0);
   const [completedTasksCount, setCompletedTasksCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
 
-  // Use the modern hooks
   const { gratitudeEntries, loading: gratitudeLoading, refreshGratitudeEntries } = useGratitude();
   const { tasks, loading: tasksLoading, refreshTasks } = useTasks();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
+      console.log('GratitudeContext: Loading data...');
       setIsLoading(true);
       
       // Refresh both gratitude and tasks data
@@ -47,10 +50,7 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
         refreshTasks()
       ]);
       
-      // Update counts from the hooks' state
-      setGratitudeCount(gratitudeEntries.length);
-      setTasksCount(tasks.length);
-      setCompletedTasksCount(tasks.filter(task => task.completed).length);
+      console.log('GratitudeContext: Data loaded successfully');
     } catch (error) {
       console.error('Error loading gratitude data:', error);
       // Set default values on error
@@ -60,7 +60,7 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [refreshGratitudeEntries, refreshTasks]);
 
   const refreshData = async () => {
     await loadData();
@@ -87,18 +87,61 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
     setCompletedTasksCount(tasks.filter(task => task.completed).length);
   }, [tasks]);
 
+  // Monitor authentication state changes
+  useEffect(() => {
+    console.log('GratitudeContext: Setting up auth listener...');
+    
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting initial session:', error);
+      } else {
+        console.log('GratitudeContext: Initial session:', session?.user?.email);
+        setSession(session);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('GratitudeContext: Auth state changed:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_IN' && session) {
+        console.log('GratitudeContext: User signed in, refreshing data...');
+        // Small delay to ensure the session is fully established
+        setTimeout(() => {
+          loadData();
+        }, 500);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('GratitudeContext: User signed out, clearing data...');
+        // Clear all cached data when user signs out
+        setGratitudeCount(0);
+        setTasksCount(0);
+        setCompletedTasksCount(0);
+        setIsLoading(false);
+      }
+      
+      setSession(session);
+    });
+
+    return () => {
+      console.log('GratitudeContext: Cleaning up auth listener');
+      subscription.unsubscribe();
+    };
+  }, [loadData]);
+
+  // Load data immediately on mount
+  useEffect(() => {
+    console.log('GratitudeContext: Initial load triggered');
+    loadData();
+  }, [loadData]);
+
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       console.log('Home screen focused, refreshing gratitude data');
       loadData();
-    }, [])
+    }, [loadData])
   );
-
-  useEffect(() => {
-    console.log('GratitudeContext: Initial load triggered');
-    loadData();
-  }, []);
 
   // Debug effect to log context value changes
   useEffect(() => {

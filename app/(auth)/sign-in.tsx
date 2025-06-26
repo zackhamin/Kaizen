@@ -13,13 +13,11 @@ import {
   View
 } from 'react-native';
 import { supabase } from '../../lib/supabase';
-import { UserService } from '../../services/user.service';
+import { userService } from '../../services/user.service.modern';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const { width } = Dimensions.get('window');
-
-const userService = new UserService();
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -122,7 +120,7 @@ export default function SignInScreen() {
             // Ensure user profile exists
             try {
               console.log('Ensuring user profile exists...');
-              const profile = await userService.ensureUserRecord();
+              const profile = await userService.getCurrentUser();
               console.log('User profile ensured successfully:', profile.id);
               router.replace('/(tabs)');
             } catch (userError: any) {
@@ -182,7 +180,7 @@ export default function SignInScreen() {
           // Ensure user profile exists
           try {
             console.log('Ensuring user profile exists...');
-            const profile = await userService.ensureUserRecord();
+            const profile = await userService.getCurrentUser();
             console.log('User profile ensured successfully:', profile.id);
             router.replace('/(tabs)');
           } catch (userError: any) {
@@ -194,7 +192,7 @@ export default function SignInScreen() {
               await new Promise(resolve => setTimeout(resolve, 1000));
               
               try {
-                const profile = await userService.ensureUserRecord();
+                const profile = await userService.getCurrentUser();
                 console.log('Retry successful:', profile.id);
                 router.replace('/(tabs)');
               } catch (retryError) {

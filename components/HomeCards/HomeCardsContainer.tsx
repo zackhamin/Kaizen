@@ -45,16 +45,16 @@ export const HomeCardsContainer: React.FC = () => {
       <View style={styles.grid}>
         <View style={styles.row}>
           <HomeCard
-            title="Gratitude"
-            subtitle="Three things you're grateful for"
+            title="Appreciations"
+            subtitle="What makes today worth your energy."
             count={gratitudeCount}
             maxCount={3}
             onPress={handleGratitudePress}
             style={styles.card}
           />
           <HomeCard
-            title="Small Wins"
-            subtitle="What will you achieve today?"
+            title="Daily targets"
+            subtitle="What will you tackle today?"
             count={completedTasksCount}
             maxCount={tasksCount || 1}
             onPress={handleTasksPress}
@@ -64,7 +64,7 @@ export const HomeCardsContainer: React.FC = () => {
         
         <View style={styles.row}>
           <HomeCard
-            title="Group Chat"
+            title="Brotherhood"
             subtitle="Anonymous group chat"
             onPress={handleGroupChatPress}
 

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { BaseService } from './base.service';
 
+// Types
 export interface Community {
   id: string;
   name: string;
@@ -30,13 +30,13 @@ export interface ChatThread {
   latest_reply?: {
     created_at: string;
     alias_username: string;
-  } | null; // FIX: Allow null
+  } | null;
 }
 
 export interface ChatReply {
   id: string;
   thread_id: string;
-  parent_reply_id?: string | null; // FIX: Allow null
+  parent_reply_id?: string | null;
   user_id: string;
   alias_username: string;
   content: string;
@@ -49,20 +49,20 @@ export interface ChatReply {
 export interface ChatReaction {
   id: string;
   user_id: string;
-  thread_id?: string | null; // FIX: Allow null
-  reply_id?: string | null;   // FIX: Allow null
+  thread_id?: string | null;
+  reply_id?: string | null;
   reaction_type: string;
   created_at: string;
 }
 
-export class CommunityService extends BaseService {
-  constructor() {
-    super('communities');
-  }
-
+// Modern functional service
+export const communityService = {
   // Get all active communities with thread counts
   async getCommunities(): Promise<Community[]> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       // First get communities
       const { data: communities, error } = await supabase
         .from('communities')
@@ -90,14 +90,17 @@ export class CommunityService extends BaseService {
 
       return communitiesWithCounts;
     } catch (error) {
-      console.error('Error fetching communities:', error);
+      console.error('CommunityService.getCommunities:', error);
       throw error;
     }
-  }
+  },
 
   // Get threads for a specific community
   async getCommunityThreads(communityId: string, limit: number = 20): Promise<ChatThread[]> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       // First get threads
       const { data: threads, error } = await supabase
         .from('chat_threads')
@@ -149,10 +152,10 @@ export class CommunityService extends BaseService {
 
       return threadsWithCounts;
     } catch (error) {
-      console.error('Error fetching community threads:', error);
+      console.error('CommunityService.getCommunityThreads:', error);
       throw error;
     }
-  }
+  },
 
   // Create a new thread
   async createThread(
@@ -161,8 +164,8 @@ export class CommunityService extends BaseService {
     content: string
   ): Promise<ChatThread> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
       // Get user's alias from profiles table
       const { data: profile, error: profileError } = await supabase
@@ -201,94 +204,76 @@ export class CommunityService extends BaseService {
 
       return data;
     } catch (error) {
-      console.error('Error creating thread:', error);
+      console.error('CommunityService.createThread:', error);
       throw error;
     }
-  }
+  },
 
-  // Get thread details with replies
+  // Get thread detail with replies
   async getThreadDetail(threadId: string): Promise<{
     thread: ChatThread;
     replies: ChatReply[];
   }> {
     try {
-      // Get thread details
-      const { data: threadData, error: threadError } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Get thread
+      const { data: thread, error: threadError } = await supabase
         .from('chat_threads')
-        .select(`
-          *,
-          reply_count:chat_replies(count),
-          reaction_count:chat_reactions(count)
-        `)
+        .select('*')
         .eq('id', threadId)
+        .eq('is_flagged', false)
         .single();
 
       if (threadError) throw threadError;
 
       // Get replies
-      const { data: repliesData, error: repliesError } = await supabase
+      const { data: replies, error: repliesError } = await supabase
         .from('chat_replies')
-        .select(`
-          *,
-          reaction_count:chat_reactions(count)
-        `)
+        .select('*')
         .eq('thread_id', threadId)
         .eq('is_flagged', false)
         .order('created_at', { ascending: true });
 
       if (repliesError) throw repliesError;
 
-      const thread = {
-        ...threadData,
-        reply_count: threadData.reply_count?.[0]?.count || 0,
-        reaction_count: threadData.reaction_count?.[0]?.count || 0
+      return {
+        thread,
+        replies: replies || []
       };
-
-      const replies = repliesData?.map(reply => ({
-        ...reply,
-        reaction_count: reply.reaction_count?.[0]?.count || 0
-      })) || [];
-
-      return { thread, replies };
     } catch (error) {
-      console.error('Error fetching thread detail:', error);
+      console.error('CommunityService.getThreadDetail:', error);
       throw error;
     }
-  }
+  },
 
-  // Create a reply to a thread
+  // Create a reply
   async createReply(
     threadId: string,
     content: string,
     parentReplyId?: string
   ): Promise<ChatReply> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-      // Get user's alias from profiles table
+      // Get user's alias
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('alias')
         .eq('id', user.id)
         .single();
 
-      if (profileError) {
-        console.error('Error fetching user profile:', profileError);
-        throw new Error('Could not fetch user profile');
+      if (profileError || !profile?.alias) {
+        throw new Error('User alias not found. Please complete your profile setup.');
       }
-
-      if (!profile?.alias) {
-        throw new Error('User alias not found. Please complete your profile setup with an anonymous username.');
-      }
-
-      console.log('Creating reply with alias:', profile.alias);
 
       const { data, error } = await supabase
         .from('chat_replies')
         .insert({
           thread_id: threadId,
-          parent_reply_id: parentReplyId || null,
+          parent_reply_id: parentReplyId,
           user_id: user.id,
           alias_username: profile.alias,
           content: content.trim()
@@ -296,65 +281,54 @@ export class CommunityService extends BaseService {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating reply:', error);
-        throw error;
-      }
-
-      // Update thread's updated_at timestamp
-      await supabase
-        .from('chat_threads')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', threadId);
+      if (error) throw error;
 
       return data;
     } catch (error) {
-      console.error('Error creating reply:', error);
+      console.error('CommunityService.createReply:', error);
       throw error;
     }
-  }
+  },
 
-  // Add reaction to thread or reply
+  // Add a reaction
   async addReaction(
     contentType: 'thread' | 'reply',
     contentId: string,
     reactionType: string
   ): Promise<void> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
       const reactionData = {
         user_id: user.id,
         reaction_type: reactionType,
         ...(contentType === 'thread' 
-          ? { thread_id: contentId, reply_id: null }
-          : { reply_id: contentId, thread_id: null }
+          ? { thread_id: contentId }
+          : { reply_id: contentId }
         )
       };
 
       const { error } = await supabase
         .from('chat_reactions')
-        .upsert(reactionData, {
-          onConflict: `user_id,${contentType}_id,reaction_type`
-        });
+        .insert(reactionData);
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error adding reaction:', error);
+      console.error('CommunityService.addReaction:', error);
       throw error;
     }
-  }
+  },
 
-  // Remove reaction
+  // Remove a reaction
   async removeReaction(
     contentType: 'thread' | 'reply',
     contentId: string,
     reactionType: string
   ): Promise<void> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
         .from('chat_reactions')
@@ -365,8 +339,8 @@ export class CommunityService extends BaseService {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error removing reaction:', error);
+      console.error('CommunityService.removeReaction:', error);
       throw error;
     }
   }
-}
+}; 

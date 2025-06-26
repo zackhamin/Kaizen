@@ -1,7 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChatReply, ChatThread, Community, CommunityService } from '../../services/community.service';
-
-const communityService = new CommunityService();
+import { ChatReply, ChatThread, Community, communityService } from '../../services/community.service.modern';
 
 // Query keys
 export const queryKeys = {
@@ -213,11 +211,10 @@ export function useAddReaction() {
             }
           }
         }
-      } else {
-        // For reply reactions, we need to update the specific reply
-        // This is more complex and might require refetching
-        queryClient.invalidateQueries({ queryKey: queryKeys.threadDetail(contentId) });
       }
+      
+      // Invalidate queries to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.threadDetail(contentId) });
     },
   });
 }
@@ -270,10 +267,10 @@ export function useRemoveReaction() {
             }
           }
         }
-      } else {
-        // For reply reactions, invalidate to refetch
-        queryClient.invalidateQueries({ queryKey: queryKeys.threadDetail(contentId) });
       }
+      
+      // Invalidate queries to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.threadDetail(contentId) });
     },
   });
 } 

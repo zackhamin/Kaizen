@@ -3,10 +3,10 @@ description:
 globs: 
 alwaysApply: true
 ---
-# Cursor AI Project Rules - Solace App
+# Cursor AI Project Rules - Kaizen App
 
 ## Project Overview
-Solace is a React Native app built with Expo Router for men's mental health and productivity. The app focuses on anonymous peer support, CBT tools, gratitude tracking, and community features.
+Kaizen is a React Native app built with Expo Router for men's mental health and productivity. The app focuses on anonymous peer support, CBT tools, gratitude tracking, and community features.
 
 ## Technology Stack
 - **Framework**: React Native with Expo (~53.0.9)

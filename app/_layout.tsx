@@ -4,8 +4,9 @@ import { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router, Stack, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SplashScreen } from '../components/Layout/SplashScreen';
 import { colors } from '../constants/theme';
 
 // Create a client
@@ -91,14 +92,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <GratitudeProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{ 
-              flex: 1, 
-              justifyContent: 'center', 
-              alignItems: 'center',
-              backgroundColor: colors.background.light
-            }}>
-              <ActivityIndicator size="large" color="#007AFF" />
-            </View>
+            <SplashScreen />
           </GestureHandlerRootView>
         </GratitudeProvider>
       </QueryClientProvider>

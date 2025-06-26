@@ -1,6 +1,6 @@
 import { useCBTChat } from '@/app/hooks/useCBTChat';
 import { colors, theme } from '@/constants/theme';
-import { type Message } from '@/services/cbt.service';
+import { CBTMessage } from '@/services/cbt.service.modern';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -56,7 +56,7 @@ export function CBTChat({ conversationId, onBack }: CBTChatProps) {
     Keyboard.dismiss();
   }, [sendMessage]);
 
-  const renderMessage = useCallback(({ item }: { item: Message }) => (
+  const renderMessage = useCallback(({ item }: { item: CBTMessage }) => (
     <View style={[
       styles.messageContainer,
       item.role === 'user' ? styles.userMessage : styles.assistantMessage
@@ -97,7 +97,7 @@ export function CBTChat({ conversationId, onBack }: CBTChatProps) {
     </View>
   ), []);
 
-  const keyExtractor = useCallback((item: Message) => item.id, []);
+  const keyExtractor = useCallback((item: CBTMessage) => item.id, []);
 
   if (isLoadingHistory) {
     return (

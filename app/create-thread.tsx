@@ -1,24 +1,11 @@
+import { useCommunities, useCreateThread } from '@/app/hooks/useCommunities';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
-import { useCreateThread } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
-} from 'react-native';
-import { Community, CommunityService } from '../services/community.service';
-
-const communityService = new CommunityService();
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Community } from '../services/community.service.modern';
 
 export default function CreateThreadModal() {
   const router = useRouter();
@@ -27,28 +14,18 @@ export default function CreateThreadModal() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [loadingCommunity, setLoadingCommunity] = useState(true);
 
-  // Use React Query mutation for creating threads
+  // Use React Query hooks
+  const { data: communities, isLoading: loadingCommunity } = useCommunities();
   const createThreadMutation = useCreateThread();
 
+  // Find the community from the communities data
   useEffect(() => {
-    loadCommunity();
-  }, [communityId]);
-
-  const loadCommunity = async () => {
-    try {
-      setLoadingCommunity(true);
-      const communities = await communityService.getCommunities();
+    if (communities && communityId) {
       const foundCommunity = communities.find(c => c.id === communityId);
       setCommunity(foundCommunity || null);
-    } catch (error) {
-      console.error('Error loading community:', error);
-      Alert.alert('Error', 'Failed to load community information');
-    } finally {
-      setLoadingCommunity(false);
     }
-  };
+  }, [communities, communityId]);
 
   const handleCancel = () => {
     if (title.trim() || content.trim()) {

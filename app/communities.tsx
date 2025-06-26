@@ -1,19 +1,18 @@
-// app/communities.tsx
+import { useCommunities } from '@/app/hooks/useCommunities';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
-import { useCommunities } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Community } from '../services/community.service';
+import { Community } from '../services/community.service.modern';
 
 export default function CommunitiesScreen() {
   const router = useRouter();
