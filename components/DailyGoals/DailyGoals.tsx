@@ -1,8 +1,8 @@
 import { useGratitudeData } from '@/app/context/GratitudeContext';
 import { colors, theme } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 interface DailyGoal {
   id: string;
@@ -12,22 +12,29 @@ interface DailyGoal {
 }
 
 export const DailyGoals: React.FC = () => {
-  const { gratitudeCount, completedTasksCount } = useGratitudeData();
+  const { gratitudeCount, completedTasksCount, isLoading } = useGratitudeData();
+
+  // Debug logging
+  useEffect(() => {
+    console.log('DailyGoals: Received context update - gratitudeCount:', gratitudeCount, 'completedTasksCount:', completedTasksCount, 'isLoading:', isLoading);
+  }, [gratitudeCount, completedTasksCount, isLoading]);
 
   const goals: DailyGoal[] = [
     {
       id: 'gratitude',
-      text: 'Complete the gratitude page',
-      isCompleted: gratitudeCount > 0,
+      text: 'Fill out your appreciations',
+      isCompleted: gratitudeCount >= 3,
       icon: 'heart'
     },
     {
       id: 'task',
-      text: 'Complete 1 task from the Wins list',
-      isCompleted: completedTasksCount > 0,
+      text: 'Complete 1 daily target',
+      isCompleted: completedTasksCount >= 1,
       icon: 'checkmark-circle'
     }
   ];
+
+  console.log('DailyGoals: Rendering with goals:', goals.map(g => ({ id: g.id, isCompleted: g.isCompleted })));
 
   const renderGoal = (goal: DailyGoal) => (
     <View key={goal.id} style={styles.goalItem}>
@@ -49,9 +56,21 @@ export const DailyGoals: React.FC = () => {
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Daily Training</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={colors.glass.text.secondary} />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Daily Goals</Text>
+      <Text style={styles.title}>Daily Training</Text>
       <View style={styles.goalsList}>
         {goals.map(renderGoal)}
       </View>
@@ -97,5 +116,15 @@ const styles = StyleSheet.create({
   goalTextCompleted: {
     textDecorationLine: 'line-through',
     color: colors.glass.text.secondary,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.glass.text.secondary,
+    marginLeft: theme.spacing.sm,
   },
 }); 

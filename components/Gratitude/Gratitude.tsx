@@ -1,6 +1,7 @@
 import { useGratitudeData } from '@/app/context/GratitudeContext';
+import { useGratitude } from '@/app/hooks/useGratitude';
 import { colors } from '@/constants/theme';
-import { GratitudeEntry, GratitudeService } from '@/services/gratitude.service';
+import { GratitudeEntry } from '@/services/gratitude.service.modern';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -27,8 +28,6 @@ import Animated, {
 import GradientBackground from '../Layout/GradientBackground';
 
 const { width: screenWidth } = Dimensions.get('window');
-
-const gratitudeService = new GratitudeService();
 
 // Warrior Animation Component
 interface WarriorCompletionProps {
@@ -92,51 +91,50 @@ const WarriorCompletion: React.FC<WarriorCompletionProps> = ({ onAnimationComple
 
 // Main Gratitude Component
 const Gratitude: React.FC = () => {
-  const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
   const [inputText, setInputText] = useState<string>('');
-  const [loading, setLoading] = useState(true);
   const [addingEntry, setAddingEntry] = useState(false);
   const [showWarriorAnimation, setShowWarriorAnimation] = useState(false);
   const [hasShownAnimation, setHasShownAnimation] = useState(false);
   const router = useRouter();
 
+  // Use the modern hook
+  const { 
+    gratitudeEntries, 
+    loading, 
+    error, 
+    addGratitudeEntry: addEntry, 
+    deleteGratitudeEntry: deleteEntry, 
+    refreshGratitudeEntries 
+  } = useGratitude();
+
   // Get context methods to update daily goals
   const { updateGratitudeCount } = useGratitudeData();
 
+  // Update context when gratitude entries change
   useEffect(() => {
-    loadGratitudeEntries();
-  }, []);
+    console.log('Gratitude component: Updating context with count:', gratitudeEntries.length);
+    updateGratitudeCount(gratitudeEntries.length);
+  }, [gratitudeEntries, updateGratitudeCount]);
 
   // Check if we should show the warrior animation
   useEffect(() => {
+    console.log('Gratitude component: Checking animation - entries:', gratitudeEntries.length, 'hasShown:', hasShownAnimation, 'loading:', loading);
     if (gratitudeEntries.length === 3 && !hasShownAnimation && !loading) {
+      console.log('Gratitude component: Showing warrior animation');
       setShowWarriorAnimation(true);
       setHasShownAnimation(true);
     }
   }, [gratitudeEntries.length, hasShownAnimation, loading]);
 
-  const loadGratitudeEntries = async () => {
-    try {
-      setLoading(true);
-      const entries = await gratitudeService.getCurrentUserGratitudeEntries();
-      setGratitudeEntries(entries);
-      
-      // Update context with current gratitude count
-      updateGratitudeCount(entries.length);
-      
-      // Reset animation state when loading entries (e.g., on refresh)
-      if (entries.length < 3) {
-        setHasShownAnimation(false);
-      }
-    } catch (error) {
-      console.error('Error loading gratitude entries:', error);
-      Alert.alert('Error', 'Failed to load gratitude entries');
-    } finally {
-      setLoading(false);
+  // Reset animation state when entries drop below 3
+  useEffect(() => {
+    if (gratitudeEntries.length < 3) {
+      console.log('Gratitude component: Resetting animation state');
+      setHasShownAnimation(false);
     }
-  };
+  }, [gratitudeEntries.length]);
 
-  const addGratitudeEntry = async (): Promise<void> => {
+  const handleAddGratitudeEntry = async (): Promise<void> => {
     if (!inputText.trim()) return;
 
     // Check if user already has 3 entries for today
@@ -146,28 +144,20 @@ const Gratitude: React.FC = () => {
     }
 
     try {
+      console.log('Gratitude component: Adding entry:', inputText.trim());
       setAddingEntry(true);
-      const response = await gratitudeService.createGratitudeEntry(inputText.trim());
-      
-      // Handle the response - it might be an array with one element or a single object
-      const newEntry = Array.isArray(response) ? response[0] : response;
-      
-      setGratitudeEntries(prevEntries => {
-        const updatedEntries = [newEntry, ...prevEntries];
-        // Update context with new gratitude count
-        updateGratitudeCount(updatedEntries.length);
-        return updatedEntries;
-      });
+      await addEntry(inputText.trim());
       setInputText('');
+      console.log('Gratitude component: Entry added successfully');
     } catch (error) {
-      console.error('Error adding gratitude entry:', error);
+      console.error('Gratitude component: Error adding gratitude entry:', error);
       Alert.alert('Error', 'Failed to add gratitude entry');
     } finally {
       setAddingEntry(false);
     }
   };
 
-  const deleteGratitudeEntry = async (id: string): Promise<void> => {
+  const handleDeleteGratitudeEntry = async (id: string): Promise<void> => {
     Alert.alert(
       'Remove Entry',
       'Are you sure you want to remove this gratitude entry?',
@@ -178,17 +168,7 @@ const Gratitude: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await gratitudeService.deleteGratitudeEntry(id);
-              setGratitudeEntries(prevEntries => {
-                const updatedEntries = prevEntries.filter(entry => entry.id !== id);
-                // Update context with new gratitude count
-                updateGratitudeCount(updatedEntries.length);
-                // Reset animation state if entries drop below 3
-                if (updatedEntries.length < 3) {
-                  setHasShownAnimation(false);
-                }
-                return updatedEntries;
-              });
+              await deleteEntry(id);
             } catch (error) {
               console.error('Error deleting gratitude entry:', error);
               Alert.alert('Error', 'Failed to remove gratitude entry');
@@ -218,7 +198,7 @@ const Gratitude: React.FC = () => {
         </View>
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => deleteGratitudeEntry(item.id)}
+          onPress={() => handleDeleteGratitudeEntry(item.id)}
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
@@ -290,7 +270,7 @@ const Gratitude: React.FC = () => {
                   placeholderTextColor={colors.glass.text.placeholder}
                   value={inputText}
                   onChangeText={setInputText}
-                  onSubmitEditing={addGratitudeEntry}
+                  onSubmitEditing={handleAddGratitudeEntry}
                   returnKeyType="done"
                   multiline={true}
                   textAlignVertical="top"
@@ -304,7 +284,7 @@ const Gratitude: React.FC = () => {
                   addingEntry && styles.addButtonDisabled,
                   !inputText.trim() && styles.addButtonDisabled
                 ]} 
-                onPress={addGratitudeEntry}
+                onPress={handleAddGratitudeEntry}
                 activeOpacity={0.8}
                 disabled={addingEntry || !inputText.trim()}
               >
@@ -335,7 +315,7 @@ const Gratitude: React.FC = () => {
                 contentContainerStyle={styles.gratitudeListContent}
                 showsVerticalScrollIndicator={false}
                 refreshing={loading}
-                onRefresh={loadGratitudeEntries}
+                onRefresh={refreshGratitudeEntries}
               />
             </View>
           )}

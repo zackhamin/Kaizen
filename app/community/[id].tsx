@@ -1,64 +1,46 @@
+import { useCommunities, useCommunityThreads, useCreateThread } from '@/app/hooks/useCommunities';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
-import { useCommunityThreads, useCreateThread } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { ChatThread, Community, CommunityService } from '../../services/community.service';
-const communityService = new CommunityService();
+import { ChatThread, Community } from '../../services/community.service.modern';
 
 export default function CommunityDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [community, setCommunity] = useState<Community | null>(null);
-  const previousIdRef = useRef<string | null>(null);
-
-  // Use React Query for community threads
+  
+  // Use React Query hooks
+  const { data: communities, isLoading: communitiesLoading } = useCommunities();
   const { 
-    data: threads = [], 
-    isLoading, 
+    data: threads, 
+    isLoading: threadsLoading, 
     error, 
-    refetch, 
-    isRefetching 
+    refetch 
   } = useCommunityThreads(id || '');
+  
+  const [community, setCommunity] = useState<Community | null>(null);
+
+  // Find the community from the communities data
+  React.useEffect(() => {
+    if (communities && id) {
+      const foundCommunity = communities.find(c => c.id === id);
+      setCommunity(foundCommunity || null);
+    }
+  }, [communities, id]);
+
+  const isLoading = communitiesLoading || threadsLoading;
 
   // Use React Query mutation for creating threads
   const createThreadMutation = useCreateThread();
-
-  useEffect(() => {
-    console.log('Community ID changed:', previousIdRef.current, '->', id);
-    
-    // Only load community data if the ID actually changed
-    if (id && id !== previousIdRef.current) {
-      previousIdRef.current = id;
-      loadCommunityData();
-    }
-  }, [id]);
-
-  const loadCommunityData = async () => {
-    try {
-      console.log('Loading community data for ID:', id);
-      
-      // Load community info
-      const communitiesData = await communityService.getCommunities();
-      const communityData = communitiesData.find(c => c.id === id);
-      console.log('Found community:', communityData);
-      
-      setCommunity(communityData || null);
-    } catch (error) {
-      console.error('Error loading community data:', error);
-      Alert.alert('Error', 'Failed to load community data');
-    }
-  };
 
   const handleRefresh = () => {
     refetch();
@@ -275,7 +257,7 @@ export default function CommunityDetailScreen() {
           data={threads}
           renderItem={renderThreadCard}
           keyExtractor={(item) => item.id}
-          refreshing={isRefetching}
+          refreshing={isLoading}
           onRefresh={handleRefresh}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}

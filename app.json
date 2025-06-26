@@ -1,25 +1,29 @@
 {
   "expo": {
-    "name": "Solace",
-    "slug": "app",
+    "name": "Kaizen",
+    "slug": "brotherhood",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "scheme": "solace",
+    "scheme": "Kaizen",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ishaqamin.solace"
+      "bundleIdentifier": "com.hya.kaizen",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.ishaqamin.solace"
+      "package": "com.hya.kaizen"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store"
     ],
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "81c13ac3-2675-4741-9f50-23dfb535c805"
+        "projectId": "fa1387c6-32e3-474b-ab00-2951a34fd343"
       }
     },
     "owner": "ishaqamin"

@@ -1,5 +1,5 @@
 import { colors, theme } from '@/constants/theme';
-import { cbtService, type Conversation } from '@/services/cbt.service';
+import { cbtService, type CBTConversation } from '@/services/cbt.service.modern';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -18,7 +18,7 @@ import GradientBackground from '../Layout/GradientBackground';
 import { CBTChat } from './CBTChat';
 
 export function CBTScreen() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<CBTConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export function CBTScreen() {
   const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
-      const convos = await cbtService.getUserConversations();
+      const convos = await cbtService.getConversations();
       setConversations(convos);
     } catch (error) {
       console.error('Error loading conversations:', error);
@@ -55,7 +55,7 @@ export function CBTScreen() {
   const startNewSession = async () => {
     try {
       setStartingSession(true);
-      const conversation = await cbtService.startConversation('general', moodBefore);
+      const conversation = await cbtService.createConversation('New CBT Session');
       setConversations(prev => [conversation, ...prev]);
       setSelectedConversation(conversation.id);
       setShowNewSessionModal(false);
@@ -92,7 +92,7 @@ export function CBTScreen() {
     }
   }, []);
 
-  const renderConversation = useCallback(({ item }: { item: Conversation }) => (
+  const renderConversation = useCallback(({ item }: { item: CBTConversation }) => (
     <TouchableOpacity
       style={styles.conversationItem}
       onPress={() => handleConversationPress(item.id)}
@@ -108,21 +108,17 @@ export function CBTScreen() {
       </View>
       
       <View style={styles.conversationMeta}>
-        <View style={styles.moodContainer}>
-          <Ionicons name="heart" size={16} color={colors.primary.light} />
-          <Text style={styles.moodText}>
-            {item.mood_before ? `Mood: ${item.mood_before}/10` : 'No mood recorded'}
+        <View style={styles.messageCountContainer}>
+          <Ionicons name="chatbubble-outline" size={16} color={colors.primary.light} />
+          <Text style={styles.messageCountText}>
+            {item.message_count || 0} messages
           </Text>
-        </View>
-        
-        <View style={styles.sessionTypeContainer}>
-          <Text style={styles.sessionType}>{item.session_type}</Text>
         </View>
       </View>
     </TouchableOpacity>
   ), [handleConversationPress, formatDate]);
 
-  const keyExtractor = useCallback((item: Conversation) => item.id, []);
+  const keyExtractor = useCallback((item: CBTConversation) => item.id, []);
 
   if (selectedConversation) {
     return (
@@ -372,27 +368,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  moodContainer: {
+  messageCountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  moodText: {
+  messageCountText: {
     fontSize: 14,
     color: colors.glass.text.muted,
     marginLeft: theme.spacing.xs,
     fontWeight: theme.typography.weights.regular,
-  },
-  sessionTypeContainer: {
-    backgroundColor: colors.glass.sessionType,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.large,
-  },
-  sessionType: {
-    fontSize: 12,
-    color: colors.glass.text.primary,
-    fontWeight: theme.typography.weights.medium,
-    textTransform: 'capitalize',
   },
   modalContainer: {
     flex: 1,

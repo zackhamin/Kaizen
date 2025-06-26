@@ -18,7 +18,7 @@ export default function Header() {
   return (
 
       <View style={styles.header}>
-        <Text style={styles.logo}>Solace</Text>
+        <Text style={styles.logo}>Kaizen</Text>
         <View style={styles.rightButtons}>
           <TouchableOpacity onPress={handleSearch} style={styles.iconButton}>
             <Ionicons name="search-outline" size={24} color={colors.text.primary.dark} />
