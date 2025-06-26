@@ -1,6 +1,5 @@
-import { useGratitudeData } from '@/app/context/GratitudeContext';
-import { useCreateGratitudeEntry, useDeleteGratitudeEntry, useGratitudeEntries } from '@/app/hooks/useGratitude';
 import { colors } from '@/constants/theme';
+import { useCreateGratitudeEntry, useDeleteGratitudeEntry, useGratitudeEntries } from '@/hooks/useGratitude';
 import { GratitudeEntry } from '@/services/gratitude.service.modern';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -100,15 +99,6 @@ const Gratitude: React.FC = () => {
   const { data: gratitudeEntries = [], isLoading: loading, refetch: refreshGratitudeEntries } = useGratitudeEntries();
   const createGratitudeEntryMutation = useCreateGratitudeEntry();
   const deleteGratitudeEntryMutation = useDeleteGratitudeEntry();
-
-  // Get context methods to update daily goals
-  const { updateGratitudeCount } = useGratitudeData();
-
-  // Update context when gratitude entries change
-  useEffect(() => {
-    console.log('Gratitude component: Updating context with count:', gratitudeEntries.length);
-    updateGratitudeCount(gratitudeEntries.length);
-  }, [gratitudeEntries, updateGratitudeCount]);
 
   // Check if we should show the warrior animation
   useEffect(() => {

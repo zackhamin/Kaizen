@@ -1,6 +1,6 @@
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors } from '@/constants/theme';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import {
@@ -14,13 +14,14 @@ import {
 } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import { userService } from '../../services/user.service.modern';
+import { useAuth } from '../context/AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const { width } = Dimensions.get('window');
 
 export default function SignInScreen() {
-  const router = useRouter();
+  const { signIn, signUp, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -120,9 +121,9 @@ export default function SignInScreen() {
             // Ensure user profile exists
             try {
               console.log('Ensuring user profile exists...');
-              const profile = await userService.getCurrentUser();
+              const profile = await userService.getCurrentUser(signUpData.user);
               console.log('User profile ensured successfully:', profile.id);
-              router.replace('/(tabs)');
+             router.replace('/(tabs)');
             } catch (userError: any) {
               console.error('Error ensuring user profile:', userError);
               Alert.alert(
@@ -153,96 +154,98 @@ export default function SignInScreen() {
           }
         }
       } else {
-        // Sign in flow
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        // Sign in flow using AuthContext
+        const { error } = await signIn(email, password);
+        
+        if (error) {
+          console.error('Sign in error:', error);
+          Alert.alert('Error', error.message || 'Failed to sign in');
+          return;
+        }
 
-        console.log('Sign in response:', {
-          success: !signInError,
-          userId: signInData?.user?.id,
-          error: signInError ? {
-            message: signInError.message,
-            status: signInError.status,
-            code: signInError.code
-          } : null
-        });
-
-        if (signInError) throw signInError;
-
-        if (signInData?.user) {
-          console.log('Sign in successful, user:', signInData.user.id);
+        console.log('Sign in successful');
+        
+        // Wait a moment for the session to fully establish
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Get the current user from Supabase to pass to the service
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
+        if (!currentUser) {
+          Alert.alert('Error', 'Unable to get user information. Please try again.');
+          return;
+        }
+        
+        // Ensure user profile exists
+        try {
+          console.log('Ensuring user profile exists...');
+          const profile = await userService.getCurrentUser(currentUser);
+          console.log('User profile ensured successfully:', profile.id);
           
-          // Wait a moment for the session to fully establish
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Redirect to tabs after successful sign in
+          router.replace('/(tabs)');
+        } catch (userError: any) {
+          console.error('Error ensuring user profile:', userError);
           
-          // Ensure user profile exists
-          try {
-            console.log('Ensuring user profile exists...');
-            const profile = await userService.getCurrentUser();
-            console.log('User profile ensured successfully:', profile.id);
-            router.replace('/(tabs)');
-          } catch (userError: any) {
-            console.error('Error ensuring user profile:', userError);
+          // If it's a permission error, try again after a longer delay
+          if (userError.code === '42501') {
+            console.log('Permission denied, waiting and retrying...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // If it's a permission error, try again after a longer delay
-            if (userError.code === '42501') {
-              console.log('Permission denied, waiting and retrying...');
-              await new Promise(resolve => setTimeout(resolve, 1000));
+            try {
+              const profile = await userService.getCurrentUser(currentUser);
+              console.log('Retry successful:', profile.id);
               
-              try {
-                const profile = await userService.getCurrentUser();
-                console.log('Retry successful:', profile.id);
-                router.replace('/(tabs)');
-              } catch (retryError) {
-                console.error('Retry failed:', retryError);
-                Alert.alert(
-                  'Error',
-                  'There was an issue setting up your profile. Please sign out and sign in again.'
-                );
-              }
-            } else {
-              Alert.alert(
-                'Warning',
-                'Signed in successfully but there was an issue setting up your profile. Please try refreshing the app.'
-              );
+              // Redirect to tabs after successful retry
               router.replace('/(tabs)');
+            } catch (retryError) {
+              console.error('Retry failed:', retryError);
+              Alert.alert(
+                'Error',
+                'Unable to set up your profile. Please try signing in again.'
+              );
             }
+          } else {
+            Alert.alert(
+              'Error',
+              'Unable to set up your profile. Please try signing in again.'
+            );
           }
         }
       }
     } catch (error: any) {
-      console.error('Detailed error in email auth:', {
-        message: error.message,
-        status: error.status,
-        name: error.name,
-        code: error.code,
-        stack: error.stack
-      });
-      
-      // Try to get more specific error information
-      if (error.status === 500) {
-        console.error('Database error details:', {
-          originalError: error.originalError,
-          details: error.details,
-          hint: error.hint
-        });
-      }
-      
-      Alert.alert(
-        'Error',
-        isSignUp 
-          ? `Failed to create account: ${error.message}`
-          : `Failed to sign in: ${error.message}`
-      );
+      console.error('Auth error:', error);
+      Alert.alert('Error', error.message || 'Authentication failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    router.push('/forgot-password');
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await resetPassword(email);
+      
+      if (error) {
+        Alert.alert('Error', error.message || 'Failed to send reset email');
+        return;
+      }
+
+      Alert.alert(
+        'Success',
+        'Password reset email sent. Please check your inbox.'
+      );
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      Alert.alert('Error', 'Failed to send reset email');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,12 +1,20 @@
-import { useGratitudeData } from '@/app/context/GratitudeContext';
 import { colors, theme } from '@/constants/theme';
+import { useGratitudeEntries } from '@/hooks/useGratitude';
+import { useTasks } from '@/hooks/useTasks';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { HomeCard } from './HomeCard';
 
 export const HomeCardsContainer: React.FC = () => {
-  const { gratitudeCount, tasksCount, completedTasksCount, isLoading } = useGratitudeData();
+  const { data: gratitudeEntries = [], isLoading: gratitudeLoading } = useGratitudeEntries();
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks();
+  
+  const gratitudeCount = gratitudeEntries.length;
+  const tasksCount = tasks.length;
+  const completedTasksCount = tasks.filter(task => task.completed).length;
+  const isLoading = gratitudeLoading || tasksLoading;
+  
   const router = useRouter();
 
   const handleGratitudePress = () => {

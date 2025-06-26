@@ -1,6 +1,6 @@
-import { useCommunities, useCommunityThreads, useCreateThread } from '@/app/hooks/useCommunities';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
+import { useCommunities, useCommunityThreads, useCreateThread } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -32,7 +32,7 @@ export default function CommunityDetailScreen() {
   // Find the community from the communities data
   React.useEffect(() => {
     if (communities && id) {
-      const foundCommunity = communities.find(c => c.id === id);
+      const foundCommunity = communities.find((c: Community) => c.id === id);
       setCommunity(foundCommunity || null);
     }
   }, [communities, id]);

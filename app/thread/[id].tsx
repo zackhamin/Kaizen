@@ -1,6 +1,6 @@
-import { useAddReaction, useCreateReply, useThreadDetail } from '@/app/hooks/useCommunities';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
+import { useAddReaction, useCreateReply, useThreadDetail } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';

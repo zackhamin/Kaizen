@@ -1,6 +1,6 @@
-import { useCommunities, useCreateThread } from '@/app/hooks/useCommunities';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
+import { useCommunities, useCreateThread } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -22,7 +22,7 @@ export default function CreateThreadModal() {
   // Find the community from the communities data
   useEffect(() => {
     if (communities && communityId) {
-      const foundCommunity = communities.find(c => c.id === communityId);
+      const foundCommunity = communities.find((c: Community) => c.id === communityId);
       setCommunity(foundCommunity || null);
     }
   }, [communities, communityId]);

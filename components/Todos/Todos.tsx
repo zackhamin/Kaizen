@@ -1,7 +1,8 @@
-import { useGratitudeData } from '@/app/context/GratitudeContext';
-import { useCreateTask, useDeleteTask, useTasks, useToggleTask } from '@/app/hooks/useTasks';
+import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors } from '@/constants/theme';
-import React, { useEffect, useState } from 'react';
+import { useCreateTask, useDeleteTask, useTasks, useToggleTask } from '@/hooks/useTasks';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,27 +16,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import GradientBackground from '../Layout/GradientBackground';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const Todos: React.FC = () => {
-  const [inputText, setInputText] = useState<string>('');
+export const Todos: React.FC = () => {
+  const [inputText, setInputText] = useState('');
+  const router = useRouter();
 
   // Use React Query hooks instead of legacy hook
   const { data: todos = [], isLoading: loading, refetch: refreshTasks } = useTasks();
   const createTaskMutation = useCreateTask();
   const toggleTaskMutation = useToggleTask();
   const deleteTaskMutation = useDeleteTask();
-
-  // Get context methods to update daily goals
-  const { updateTaskCounts } = useGratitudeData();
-
-  // Update context when tasks change
-  useEffect(() => {
-    const completedCount = todos.filter(task => task.completed).length;
-    updateTaskCounts(todos.length, completedCount);
-  }, [todos, updateTaskCounts]);
 
   const handleAddTodo = async (): Promise<void> => {
     if (!inputText.trim() || createTaskMutation.isPending) return;
@@ -307,6 +299,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
     opacity: 0.8,
   },
-});
-
-export default Todos; 
+}); 

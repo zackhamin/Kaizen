@@ -1,5 +1,5 @@
-import { useCBTChat } from '@/app/hooks/useCBTChat';
 import { colors, theme } from '@/constants/theme';
+import { useCBTChat } from '@/hooks/useCBTChat';
 import { CBTMessage } from '@/services/cbt.service.modern';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';

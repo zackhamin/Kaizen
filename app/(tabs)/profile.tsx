@@ -1,14 +1,13 @@
-import { useCurrentUser } from '@/app/hooks/useUser';
 import GradientBackground from '@/components/Layout/GradientBackground';
-import { supabase } from '@/lib/supabase';
+import { useCurrentUser } from '@/hooks/useUser';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProfileScreen() {
-  const router = useRouter();
+  const { signOut } = useAuth();
   const queryClient = useQueryClient();
   
   // Use modern hook for current user
@@ -35,19 +34,11 @@ export default function ProfileScreen() {
               console.log('Clearing React Query cache...');
               queryClient.clear();
               
-              // Sign out from Supabase (this automatically clears the stored token)
-              const { error: signOutError } = await supabase.auth.signOut();
-              
-              if (signOutError) {
-                console.error('Sign out error:', signOutError);
-                Alert.alert('Error', 'Failed to sign out. Please try again.');
-                return;
-              }
+              // Sign out using AuthContext
+              await signOut();
               
               console.log('User signed out successfully');
-              
-              // Navigate to sign-in screen
-              router.replace('/(auth)/sign-in');
+              // AuthContext will handle navigation automatically
               
             } catch (error) {
               console.error('Unexpected error during sign out:', error);
@@ -63,9 +54,6 @@ export default function ProfileScreen() {
     return (
       <GradientBackground>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <Ionicons name="close" size={28} color="#333" />
-          </TouchableOpacity>
           <Text style={styles.title}>Settings</Text>
         </View>
         <View style={styles.centered}>
@@ -79,9 +67,6 @@ export default function ProfileScreen() {
     return (
       <GradientBackground>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <Ionicons name="close" size={28} color="#333" />
-          </TouchableOpacity>
           <Text style={styles.title}>Settings</Text>
         </View>
         <View style={styles.centered}>
@@ -94,9 +79,6 @@ export default function ProfileScreen() {
   return (
     <GradientBackground>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-          <Ionicons name="close" size={28} color="#333" />
-        </TouchableOpacity>
         <Text style={styles.title}>Settings</Text>
       </View>
       

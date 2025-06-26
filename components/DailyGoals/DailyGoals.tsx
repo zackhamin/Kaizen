@@ -1,7 +1,8 @@
-import { useGratitudeData } from '@/app/context/GratitudeContext';
 import { colors, theme } from '@/constants/theme';
+import { useGratitudeEntries } from '@/hooks/useGratitude';
+import { useTasks } from '@/hooks/useTasks';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 interface DailyGoal {
@@ -12,12 +13,12 @@ interface DailyGoal {
 }
 
 export const DailyGoals: React.FC = () => {
-  const { gratitudeCount, completedTasksCount, isLoading } = useGratitudeData();
+  const { data: gratitudeEntries = [], isLoading: gratitudeLoading } = useGratitudeEntries();
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks();
 
-  // Debug logging
-  useEffect(() => {
-    console.log('DailyGoals: Received context update - gratitudeCount:', gratitudeCount, 'completedTasksCount:', completedTasksCount, 'isLoading:', isLoading);
-  }, [gratitudeCount, completedTasksCount, isLoading]);
+  const gratitudeCount = gratitudeEntries.length;
+  const completedTasksCount = tasks.filter(task => task.completed).length;
+  const isLoading = gratitudeLoading || tasksLoading;
 
   const goals: DailyGoal[] = [
     {

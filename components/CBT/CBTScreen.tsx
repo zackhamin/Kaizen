@@ -1,5 +1,5 @@
-import { useCBTConversations, useCreateCBTConversation } from '@/app/hooks/useCBTChat';
 import { colors, theme } from '@/constants/theme';
+import { useCBTConversations, useCreateCBTConversation } from '@/hooks/useCBTChat';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useState } from 'react';
 import {

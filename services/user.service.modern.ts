@@ -1,19 +1,8 @@
 import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 // Types
-export interface User {
-  id: string;
-  email: string;
-  username?: string;
-  full_name?: string;
-  bio?: string;
-  avatar_url?: string;
-  alias?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Profile {
+export interface UserProfile {
   id: string;
   email: string;
   username?: string;
@@ -28,11 +17,8 @@ export interface Profile {
 // Modern functional service
 export const userService = {
   // Get current user profile
-  async getCurrentUser(): Promise<Profile> {
+  async getCurrentUser(user: User): Promise<UserProfile> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -48,11 +34,8 @@ export const userService = {
   },
 
   // Update user profile
-  async updateProfile(updates: Partial<Profile>): Promise<Profile> {
+  async updateProfile(user: User, updates: Partial<UserProfile>): Promise<UserProfile> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -69,11 +52,8 @@ export const userService = {
   },
 
   // Set user alias (anonymous username)
-  async setAlias(alias: string): Promise<Profile> {
+  async setAlias(user: User, alias: string): Promise<UserProfile> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
-
       // Check if alias is already taken
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
@@ -102,11 +82,8 @@ export const userService = {
   },
 
   // Update user avatar
-  async updateAvatar(avatarUrl: string): Promise<Profile> {
+  async updateAvatar(user: User, avatarUrl: string): Promise<UserProfile> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
         .from('profiles')
         .update({ avatar_url: avatarUrl })
@@ -123,11 +100,8 @@ export const userService = {
   },
 
   // Delete user account
-  async deleteAccount(): Promise<void> {
+  async deleteAccount(user: User): Promise<void> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
-
       // Delete user profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -146,7 +120,7 @@ export const userService = {
   },
 
   // Get user by ID (for admin purposes)
-  async getUserById(userId: string): Promise<Profile | null> {
+  async getUserById(userId: string): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -163,7 +137,7 @@ export const userService = {
   },
 
   // Search users by alias (for admin purposes)
-  async searchUsersByAlias(alias: string): Promise<Profile[]> {
+  async searchUsersByAlias(alias: string): Promise<UserProfile[]> {
     try {
       const { data, error } = await supabase
         .from('profiles')

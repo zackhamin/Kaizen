@@ -1,5 +1,5 @@
+import { ChatReply, ChatThread, Community, communityService } from '@/services/community.service.modern';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChatReply, ChatThread, Community, communityService } from '../../services/community.service.modern';
 
 // Query keys
 export const queryKeys = {
@@ -60,8 +60,8 @@ export function useCreateThread() {
           if (!oldData) return [newThread];
           
           // Add new thread at the top (unless there are pinned threads)
-          const pinnedThreads = oldData.filter(t => t.is_pinned);
-          const regularThreads = oldData.filter(t => !t.is_pinned);
+          const pinnedThreads = oldData.filter((t: ChatThread) => t.is_pinned);
+          const regularThreads = oldData.filter((t: ChatThread) => !t.is_pinned);
           
           return [...pinnedThreads, newThread, ...regularThreads];
         }
@@ -73,7 +73,7 @@ export function useCreateThread() {
         (oldData: Community[] | undefined) => {
           if (!oldData) return oldData;
           
-          return oldData.map(community => 
+          return oldData.map((community: Community) => 
             community.id === communityId
               ? { ...community, thread_count: (community.thread_count || 0) + 1 }
               : community
@@ -136,7 +136,7 @@ export function useCreateReply() {
         for (const community of allCommunities) {
           const communityThreads = queryClient.getQueryData(queryKeys.communityThreads(community.id)) as ChatThread[] | undefined;
           if (communityThreads) {
-            const threadIndex = communityThreads.findIndex(t => t.id === threadId);
+            const threadIndex = communityThreads.findIndex((t: ChatThread) => t.id === threadId);
             if (threadIndex !== -1) {
               // Update the specific thread in this community
               const updatedThreads = [...communityThreads];
@@ -197,7 +197,7 @@ export function useAddReaction() {
           for (const community of allCommunities) {
             const communityThreads = queryClient.getQueryData(queryKeys.communityThreads(community.id)) as ChatThread[] | undefined;
             if (communityThreads) {
-              const threadIndex = communityThreads.findIndex(t => t.id === contentId);
+              const threadIndex = communityThreads.findIndex((t: ChatThread) => t.id === contentId);
               if (threadIndex !== -1) {
                 const updatedThreads = [...communityThreads];
                 updatedThreads[threadIndex] = {
@@ -253,7 +253,7 @@ export function useRemoveReaction() {
           for (const community of allCommunities) {
             const communityThreads = queryClient.getQueryData(queryKeys.communityThreads(community.id)) as ChatThread[] | undefined;
             if (communityThreads) {
-              const threadIndex = communityThreads.findIndex(t => t.id === contentId);
+              const threadIndex = communityThreads.findIndex((t: ChatThread) => t.id === contentId);
               if (threadIndex !== -1) {
                 const updatedThreads = [...communityThreads];
                 updatedThreads[threadIndex] = {

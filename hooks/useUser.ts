@@ -1,7 +1,6 @@
-import { supabase } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { Profile, userService } from '../../services/user.service.modern';
+import { useAuth } from '../app/context/AuthContext';
+import { UserProfile, userService } from '../services/user.service.modern';
 
 // Query keys
 export const queryKeys = {
@@ -12,43 +11,24 @@ export const queryKeys = {
 
 // Hook for fetching current user
 export function useCurrentUser() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   const query = useQuery({
     queryKey: queryKeys.currentUser,
     queryFn: async () => {
-      // Check if user is authenticated before making the API call
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User not authenticated');
       }
       console.log('useCurrentUser: User authenticated, fetching profile for:', user.id);
-      return userService.getCurrentUser();
+      return userService.getCurrentUser(user);
     },
     staleTime: 1000 * 30, // 30 seconds - more aggressive for user data
     gcTime: 1000 * 60 * 2, // 2 minutes cache time
     retry: 2,
     refetchOnWindowFocus: true, // Refetch when app comes back to focus
-    enabled: true, // Always enabled, but will throw error if no user
+    enabled: !!user, // Only enabled when user exists
   });
-
-  // Monitor authentication state changes to invalidate user cache
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('useCurrentUser: Auth state changed:', event, session?.user?.email);
-      
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        console.log('useCurrentUser: Invalidating user cache due to auth change');
-        // Invalidate user cache when auth state changes
-        queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
-        queryClient.removeQueries({ queryKey: queryKeys.currentUser });
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [queryClient]);
 
   return query;
 }
@@ -77,10 +57,14 @@ export function useUsersByAlias(alias: string) {
 
 // Hook for updating user profile
 export function useUpdateProfile() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (updates: Partial<Profile>) => userService.updateProfile(updates),
+    mutationFn: (updates: Partial<UserProfile>) => {
+      if (!user) throw new Error('User not authenticated');
+      return userService.updateProfile(user, updates);
+    },
     onSuccess: (updatedProfile) => {
       // Update current user cache
       queryClient.setQueryData(queryKeys.currentUser, updatedProfile);
@@ -96,10 +80,14 @@ export function useUpdateProfile() {
 
 // Hook for setting user alias
 export function useSetAlias() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (alias: string) => userService.setAlias(alias),
+    mutationFn: (alias: string) => {
+      if (!user) throw new Error('User not authenticated');
+      return userService.setAlias(user, alias);
+    },
     onSuccess: (updatedProfile) => {
       // Update current user cache
       queryClient.setQueryData(queryKeys.currentUser, updatedProfile);
@@ -115,10 +103,14 @@ export function useSetAlias() {
 
 // Hook for updating user avatar
 export function useUpdateAvatar() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (avatarUrl: string) => userService.updateAvatar(avatarUrl),
+    mutationFn: (avatarUrl: string) => {
+      if (!user) throw new Error('User not authenticated');
+      return userService.updateAvatar(user, avatarUrl);
+    },
     onSuccess: (updatedProfile) => {
       // Update current user cache
       queryClient.setQueryData(queryKeys.currentUser, updatedProfile);
@@ -134,10 +126,14 @@ export function useUpdateAvatar() {
 
 // Hook for deleting user account
 export function useDeleteAccount() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: () => userService.deleteAccount(),
+    mutationFn: () => {
+      if (!user) throw new Error('User not authenticated');
+      return userService.deleteAccount(user);
+    },
     onSuccess: () => {
       // Clear all user-related cache
       queryClient.removeQueries({ queryKey: ['user'] });

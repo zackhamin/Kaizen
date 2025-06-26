@@ -1,6 +1,6 @@
-import { useCommunities } from '@/app/hooks/useCommunities';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors, theme } from '@/constants/theme';
+import { useCommunities } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';

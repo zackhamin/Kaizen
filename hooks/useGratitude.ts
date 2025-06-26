@@ -1,7 +1,6 @@
+import { supabase } from '@/lib/supabase';
+import { GratitudeEntry, gratitudeService } from '@/services/gratitude.service.modern';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
-import { supabase } from '../../lib/supabase';
-import { GratitudeEntry, gratitudeService } from '../../services/gratitude.service.modern';
 
 // Query keys
 export const queryKeys = {
@@ -10,7 +9,7 @@ export const queryKeys = {
 };
 
 // Hook for fetching gratitude entries
-export function useGratitudeEntries(date?: string, enabled: boolean = true) {
+export function useGratitudeEntries(date?: string) {
   return useQuery({
     queryKey: date ? queryKeys.gratitudeEntriesForDate(date) : queryKeys.gratitudeEntries,
     queryFn: async () => {
@@ -26,7 +25,6 @@ export function useGratitudeEntries(date?: string, enabled: boolean = true) {
       return entries;
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
-    enabled: enabled, // Only enabled when auth is ready
     retry: (failureCount, error: any) => {
       // Don't retry if user is not authenticated
       if (error?.message === 'User not authenticated') {
@@ -88,7 +86,7 @@ export function useUpdateGratitudeEntry() {
         queryKeys.gratitudeEntries,
         (oldData: GratitudeEntry[] | undefined) => {
           if (!oldData) return oldData;
-          return oldData.map(entry => 
+          return oldData.map((entry: GratitudeEntry) => 
             entry.id === updatedEntry.id ? updatedEntry : entry
           );
         }
@@ -145,66 +143,3 @@ export function useGratitudeEntriesForDate(date: string) {
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
-
-// Legacy hook for backward compatibility
-export const useGratitude = (date?: string) => {
-  const { data: gratitudeEntries = [], isLoading: loading, error, refetch } = useGratitudeEntries(date);
-  const createMutation = useCreateGratitudeEntry();
-  const updateMutation = useUpdateGratitudeEntry();
-  const deleteMutation = useDeleteGratitudeEntry();
-  const { refetch: refetchForDate } = useGratitudeEntriesForDate(date || '');
-
-  const addGratitudeEntry = useCallback(async (content: string, entryDate?: string) => {
-    try {
-      await createMutation.mutateAsync({ content, date: entryDate });
-    } catch (err) {
-      console.error('Error adding gratitude entry:', err);
-      throw err;
-    }
-  }, [createMutation]);
-
-  const updateGratitudeEntry = useCallback(async (id: string, content: string) => {
-    try {
-      await updateMutation.mutateAsync({ id, content });
-    } catch (err) {
-      console.error('Error updating gratitude entry:', err);
-      throw err;
-    }
-  }, [updateMutation]);
-
-  const deleteGratitudeEntry = useCallback(async (id: string) => {
-    try {
-      await deleteMutation.mutateAsync(id);
-    } catch (err) {
-      console.error('Error deleting gratitude entry:', err);
-      throw err;
-    }
-  }, [deleteMutation]);
-
-  const refreshGratitudeEntries = useCallback(async () => {
-    await refetch();
-    if (date) {
-      await refetchForDate();
-    }
-  }, [refetch, refetchForDate, date]);
-
-  const getGratitudeEntriesForDate = useCallback(async (targetDate: string) => {
-    try {
-      return await gratitudeService.getGratitudeEntriesForDate(targetDate);
-    } catch (err) {
-      console.error('Error getting gratitude entries for date:', err);
-      throw err;
-    }
-  }, []);
-
-  return {
-    gratitudeEntries,
-    loading,
-    error: error?.message || null,
-    addGratitudeEntry,
-    updateGratitudeEntry,
-    deleteGratitudeEntry,
-    refreshGratitudeEntries,
-    getGratitudeEntriesForDate,
-  };
-}; 

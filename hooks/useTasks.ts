@@ -9,7 +9,7 @@ export const queryKeys = {
 };
 
 // Hook for fetching tasks
-export function useTasks(enabled: boolean = true) {
+export function useTasks() {
   return useQuery({
     queryKey: queryKeys.tasks,
     queryFn: async () => {
@@ -25,7 +25,6 @@ export function useTasks(enabled: boolean = true) {
       return tasks;
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
-    enabled: enabled, // Only enabled when auth is ready
     retry: (failureCount, error: any) => {
       // Don't retry if user is not authenticated
       if (error?.message === 'User not authenticated') {
@@ -70,7 +69,7 @@ export function useToggleTask() {
         queryKeys.tasks,
         (oldData: Task[] | undefined) => {
           if (!oldData) return oldData;
-          return oldData.map(task => 
+          return oldData.map((task: Task) => 
             task.id === updatedTask.id ? updatedTask : task
           );
         }
@@ -94,7 +93,7 @@ export function useDeleteTask() {
         queryKeys.tasks,
         (oldData: Task[] | undefined) => {
           if (!oldData) return oldData;
-          return oldData.filter(task => task.id !== deletedId);
+          return oldData.filter((task: Task) => task.id !== deletedId);
         }
       );
       
@@ -117,7 +116,7 @@ export function useUpdateTaskText() {
         queryKeys.tasks,
         (oldData: Task[] | undefined) => {
           if (!oldData) return oldData;
-          return oldData.map(task => 
+          return oldData.map((task: Task) => 
             task.id === updatedTask.id ? updatedTask : task
           );
         }

@@ -1,5 +1,5 @@
 import GradientBackground from '@/components/Layout/GradientBackground';
-import Todos from '@/components/Todos/Todos';
+import { Todos } from '@/components/Todos/Todos';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 

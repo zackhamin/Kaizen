@@ -1,48 +1,20 @@
 import { colors, theme } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
 
 interface SplashScreenProps {
   message?: string;
-  onReady?: () => void;
-  isReady?: boolean;
+  children?: React.ReactNode;
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ 
   message = 'Loading...',
-  onReady,
-  isReady = false
+  children
 }) => {
-  const [startTime] = useState(Date.now());
-  const [canHide, setCanHide] = useState(false);
-
-  useEffect(() => {
-    const checkMinimumTime = () => {
-      const elapsed = Date.now() - startTime;
-      const minimumTime = 1000; // 1 second minimum
-
-      if (elapsed >= minimumTime && isReady) {
-        setCanHide(true);
-        onReady?.();
-      } else if (elapsed >= minimumTime) {
-        setCanHide(true);
-      } else {
-        // If minimum time hasn't passed, check again
-        const remainingTime = minimumTime - elapsed;
-        setTimeout(checkMinimumTime, remainingTime);
-      }
-    };
-
-    checkMinimumTime();
-  }, [startTime, isReady, onReady]);
-
-  // Don't render anything if we can hide and are ready
-  if (canHide && isReady) {
-    return null;
-  }
-
   return (
+    <>
+    <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
     <View style={styles.container}>
       <LinearGradient
         colors={[colors.accent.slate, colors.background.dark]}
@@ -50,7 +22,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      
       <View style={styles.content}>
         {/* Kaizen Logo */}
         <View style={styles.logoContainer}>
@@ -65,20 +36,21 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         </View>
         
         {/* Loading Indicator */}
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.accent.copper} />
+        {/* <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>{message}</Text>
-        </View>
+        </View> */}
+        
+        {/* Additional content */}
+        {children}
       </View>
     </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   content: {
     flex: 1,

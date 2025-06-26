@@ -1,7 +1,7 @@
+import { CBTConversation, CBTMessage, cbtService } from '@/services/cbt.service.modern';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import { CBTConversation, CBTMessage, cbtService } from '../../services/cbt.service.modern';
 
 interface UseCBTChatProps {
   conversationId: string;
@@ -107,7 +107,7 @@ export function useAddCBTMessage() {
         (oldData: CBTConversation[] | undefined) => {
           if (!oldData) return oldData;
           
-          return oldData.map(conversation => 
+          return oldData.map((conversation: CBTConversation) => 
             conversation.id === conversationId
               ? { 
                   ...conversation, 
@@ -152,7 +152,7 @@ export function useDeleteCBTConversation() {
         queryKeys.conversations,
         (oldData: CBTConversation[] | undefined) => {
           if (!oldData) return oldData;
-          return oldData.filter(conversation => conversation.id !== conversationId);
+          return oldData.filter((conversation: CBTConversation) => conversation.id !== conversationId);
         }
       );
       
@@ -185,7 +185,7 @@ export function useUpdateCBTConversationTitle() {
         (oldData: CBTConversation[] | undefined) => {
           if (!oldData) return oldData;
           
-          return oldData.map(conversation => 
+          return oldData.map((conversation: CBTConversation) => 
             conversation.id === updatedConversation.id
               ? updatedConversation
               : conversation

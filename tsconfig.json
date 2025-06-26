@@ -9,7 +9,9 @@
         "./components/*",
         "./constants/*",
         "./hooks/*",
-        "./services/*"
+        "./services/*",
+        "./app/context/*",
+        "./lib/*"
       ]
     }
   },
