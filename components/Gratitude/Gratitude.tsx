@@ -1,5 +1,5 @@
 import { useGratitudeData } from '@/app/context/GratitudeContext';
-import { useGratitude } from '@/app/hooks/useGratitude';
+import { useCreateGratitudeEntry, useDeleteGratitudeEntry, useGratitudeEntries } from '@/app/hooks/useGratitude';
 import { colors } from '@/constants/theme';
 import { GratitudeEntry } from '@/services/gratitude.service.modern';
 import { useRouter } from 'expo-router';
@@ -92,20 +92,14 @@ const WarriorCompletion: React.FC<WarriorCompletionProps> = ({ onAnimationComple
 // Main Gratitude Component
 const Gratitude: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
-  const [addingEntry, setAddingEntry] = useState(false);
   const [showWarriorAnimation, setShowWarriorAnimation] = useState(false);
   const [hasShownAnimation, setHasShownAnimation] = useState(false);
   const router = useRouter();
 
-  // Use the modern hook
-  const { 
-    gratitudeEntries, 
-    loading, 
-    error, 
-    addGratitudeEntry: addEntry, 
-    deleteGratitudeEntry: deleteEntry, 
-    refreshGratitudeEntries 
-  } = useGratitude();
+  // Use React Query hooks instead of legacy hook
+  const { data: gratitudeEntries = [], isLoading: loading, refetch: refreshGratitudeEntries } = useGratitudeEntries();
+  const createGratitudeEntryMutation = useCreateGratitudeEntry();
+  const deleteGratitudeEntryMutation = useDeleteGratitudeEntry();
 
   // Get context methods to update daily goals
   const { updateGratitudeCount } = useGratitudeData();
@@ -135,7 +129,7 @@ const Gratitude: React.FC = () => {
   }, [gratitudeEntries.length]);
 
   const handleAddGratitudeEntry = async (): Promise<void> => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || createGratitudeEntryMutation.isPending) return;
 
     // Check if user already has 3 entries for today
     if (gratitudeEntries.length >= 3) {
@@ -145,15 +139,12 @@ const Gratitude: React.FC = () => {
 
     try {
       console.log('Gratitude component: Adding entry:', inputText.trim());
-      setAddingEntry(true);
-      await addEntry(inputText.trim());
+      await createGratitudeEntryMutation.mutateAsync({ content: inputText.trim() });
       setInputText('');
       console.log('Gratitude component: Entry added successfully');
     } catch (error) {
       console.error('Gratitude component: Error adding gratitude entry:', error);
       Alert.alert('Error', 'Failed to add gratitude entry');
-    } finally {
-      setAddingEntry(false);
     }
   };
 
@@ -168,7 +159,7 @@ const Gratitude: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteEntry(id);
+              await deleteGratitudeEntryMutation.mutateAsync(id);
             } catch (error) {
               console.error('Error deleting gratitude entry:', error);
               Alert.alert('Error', 'Failed to remove gratitude entry');
@@ -275,20 +266,20 @@ const Gratitude: React.FC = () => {
                   multiline={true}
                   textAlignVertical="top"
                   maxLength={200}
-                  editable={!addingEntry}
+                  editable={!createGratitudeEntryMutation.isPending}
                 />
               </View>
               <TouchableOpacity 
                 style={[
                   styles.addButton, 
-                  addingEntry && styles.addButtonDisabled,
+                  createGratitudeEntryMutation.isPending && styles.addButtonDisabled,
                   !inputText.trim() && styles.addButtonDisabled
                 ]} 
                 onPress={handleAddGratitudeEntry}
                 activeOpacity={0.8}
-                disabled={addingEntry || !inputText.trim()}
+                disabled={createGratitudeEntryMutation.isPending || !inputText.trim()}
               >
-                {addingEntry ? (
+                {createGratitudeEntryMutation.isPending ? (
                   <ActivityIndicator size="small" color={colors.glass.text.primary} />
                 ) : (
                   <Text style={styles.addButtonText}>Add Entry</Text>

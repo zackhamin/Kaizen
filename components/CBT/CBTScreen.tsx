@@ -1,7 +1,7 @@
+import { useCBTConversations, useCreateCBTConversation } from '@/app/hooks/useCBTChat';
 import { colors, theme } from '@/constants/theme';
-import { cbtService, type CBTConversation } from '@/services/cbt.service.modern';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,53 +18,23 @@ import GradientBackground from '../Layout/GradientBackground';
 import { CBTChat } from './CBTChat';
 
 export function CBTScreen() {
-  const [conversations, setConversations] = useState<CBTConversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [moodBefore, setMoodBefore] = useState(5);
-  const [startingSession, setStartingSession] = useState(false);
-
-  useEffect(() => {
-    loadConversations();
-  }, []);
-
-  const loadConversations = useCallback(async () => {
-    try {
-      setLoading(true);
-      const convos = await cbtService.getConversations();
-      setConversations(convos);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-      Alert.alert('Error', 'Failed to load conversations');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const onRefresh = useCallback(async () => {
-    try {
-      setRefreshing(true);
-      await loadConversations();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [loadConversations]);
+  
+  // Use React Query hooks instead of local state
+  const { data: conversations = [], isLoading, refetch } = useCBTConversations();
+  const createConversationMutation = useCreateCBTConversation();
 
   const startNewSession = async () => {
     try {
-      setStartingSession(true);
-      const conversation = await cbtService.createConversation('New CBT Session');
-      setConversations(prev => [conversation, ...prev]);
+      const conversation = await createConversationMutation.mutateAsync('New CBT Session');
       setSelectedConversation(conversation.id);
       setShowNewSessionModal(false);
       setMoodBefore(5);
     } catch (error) {
       console.error('Error starting session:', error);
       Alert.alert('Error', 'Failed to start new session. Please try again.');
-    } finally {
-      setStartingSession(false);
     }
   };
 
@@ -74,9 +44,8 @@ export function CBTScreen() {
 
   const handleBackFromChat = useCallback(() => {
     setSelectedConversation(null);
-    // Refresh conversations when returning from chat to see any updates
-    loadConversations();
-  }, [loadConversations]);
+    // React Query will automatically refetch when needed
+  }, []);
 
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
@@ -92,7 +61,7 @@ export function CBTScreen() {
     }
   }, []);
 
-  const renderConversation = useCallback(({ item }: { item: CBTConversation }) => (
+  const renderConversation = useCallback(({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.conversationItem}
       onPress={() => handleConversationPress(item.id)}
@@ -118,7 +87,7 @@ export function CBTScreen() {
     </TouchableOpacity>
   ), [handleConversationPress, formatDate]);
 
-  const keyExtractor = useCallback((item: CBTConversation) => item.id, []);
+  const keyExtractor = useCallback((item: any) => item.id, []);
 
   if (selectedConversation) {
     return (
@@ -129,7 +98,7 @@ export function CBTScreen() {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <GradientBackground showHeader={false}>
         <View style={styles.loadingContainer}>
@@ -179,8 +148,8 @@ export function CBTScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
+              refreshing={isLoading}
+              onRefresh={refetch}
               tintColor={colors.accent.white}
               colors={[colors.primary.main]}
             />
@@ -199,46 +168,32 @@ export function CBTScreen() {
             <View style={styles.modalHeader}>
               <TouchableOpacity
                 onPress={() => setShowNewSessionModal(false)}
-                style={styles.closeButton}
-                disabled={startingSession}
+                style={styles.modalCloseButton}
               >
-                <Ionicons name="close" size={24} color={colors.glass.text.primary} />
+                <Ionicons name="close" size={24} color={colors.accent.white} />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>New CBT Session</Text>
-              <View style={styles.modalSpacer} />
+              <Text style={styles.modalTitle}>Start New Session</Text>
             </View>
 
             <View style={styles.modalContent}>
-              <Text style={styles.modalSubtitle}>
-                How are you feeling right now?
-              </Text>
-              <Text style={styles.modalDescription}>
-                Rate your current mood on a scale from 1 (very low) to 10 (excellent)
-              </Text>
-              
               <QuestionCard
-                question=""
+                question="How are you feeling right now?"
                 initialValue={moodBefore}
                 onValueChange={setMoodBefore}
-                showLabels={false}
+                showLabels={true}
                 transparent={true}
               />
-
-              <View style={styles.moodLabels}>
-                <Text style={styles.moodLabel}>Very Low</Text>
-                <Text style={styles.moodLabel}>Excellent</Text>
-              </View>
 
               <TouchableOpacity
                 style={[
                   styles.startSessionButton,
-                  startingSession && styles.startSessionButtonDisabled
+                  createConversationMutation.isPending && styles.startSessionButtonDisabled
                 ]}
                 onPress={startNewSession}
-                disabled={startingSession}
+                disabled={createConversationMutation.isPending}
                 activeOpacity={0.8}
               >
-                {startingSession ? (
+                {createConversationMutation.isPending ? (
                   <ActivityIndicator size="small" color={colors.accent.white} />
                 ) : (
                   <Text style={styles.startSessionText}>Start Session</Text>
@@ -390,7 +345,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.glass.overlayBorder,
     backgroundColor: colors.glass.overlay,
   },
-  closeButton: {
+  modalCloseButton: {
     padding: theme.spacing.sm,
     borderRadius: theme.borderRadius.medium,
   },
@@ -401,38 +356,9 @@ const styles = StyleSheet.create({
     color: colors.glass.text.primary,
     textAlign: 'center',
   },
-  modalSpacer: {
-    width: 40,
-  },
   modalContent: {
     flex: 1,
     padding: theme.spacing.lg,
-  },
-  modalSubtitle: {
-    fontSize: 18,
-    color: colors.glass.text.primary,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
-    fontWeight: theme.typography.weights.medium,
-  },
-  modalDescription: {
-    fontSize: 14,
-    color: colors.glass.text.secondary,
-    marginBottom: theme.spacing.lg,
-    textAlign: 'center',
-    lineHeight: 20,
-    fontWeight: theme.typography.weights.regular,
-  },
-  moodLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
-  },
-  moodLabel: {
-    fontSize: 12,
-    color: colors.glass.text.muted,
-    fontWeight: theme.typography.weights.regular,
   },
   startSessionButton: {
     backgroundColor: colors.primary.main,

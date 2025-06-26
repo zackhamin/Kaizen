@@ -1,8 +1,7 @@
-import { supabase } from '@/lib/supabase';
 import { useFocusEffect } from '@react-navigation/native';
-import { Session } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { useGratitude } from '../hooks/useGratitude';
+import { supabase } from '../../lib/supabase';
+import { useGratitudeEntries } from '../hooks/useGratitude';
 import { useTasks } from '../hooks/useTasks';
 
 interface GratitudeData {
@@ -34,23 +33,58 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
   const [tasksCount, setTasksCount] = useState(0);
   const [completedTasksCount, setCompletedTasksCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const { gratitudeEntries, loading: gratitudeLoading, refreshGratitudeEntries } = useGratitude();
-  const { tasks, loading: tasksLoading, refreshTasks } = useTasks();
+  console.log('GratitudeProvider: Component rendering...');
+
+  // Check auth state
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      console.log('GratitudeProvider: Auth state checked, user:', !!user);
+    };
+    
+    checkAuth();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session?.user);
+      console.log('GratitudeProvider: Auth state changed:', event, !!session?.user);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Use React Query hooks - enable them when user is authenticated
+  const { 
+    data: gratitudeEntries = [], 
+    isLoading: gratitudeLoading, 
+    refetch: refreshGratitudeEntries,
+    error: gratitudeError 
+  } = useGratitudeEntries(undefined, isAuthenticated);
+  
+  const { 
+    data: tasks = [], 
+    isLoading: tasksLoading, 
+    refetch: refreshTasks 
+  } = useTasks(isAuthenticated);
+
+  console.log('GratitudeProvider: Hooks initialized - gratitudeEntries:', gratitudeEntries.length, 'tasks:', tasks.length, 'gratitudeError:', gratitudeError, 'isAuthenticated:', isAuthenticated);
 
   const loadData = useCallback(async () => {
     try {
-      console.log('GratitudeContext: Loading data...');
+      console.log('GratitudeProvider: loadData called');
       setIsLoading(true);
       
-      // Refresh both gratitude and tasks data
-      await Promise.all([
-        refreshGratitudeEntries(),
-        refreshTasks()
-      ]);
+      // Only refresh if user is authenticated
+      if (isAuthenticated) {
+        await Promise.all([
+          refreshGratitudeEntries(),
+          refreshTasks()
+        ]);
+      }
       
-      console.log('GratitudeContext: Data loaded successfully');
     } catch (error) {
       console.error('Error loading gratitude data:', error);
       // Set default values on error
@@ -60,7 +94,7 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
     } finally {
       setIsLoading(false);
     }
-  }, [refreshGratitudeEntries, refreshTasks]);
+  }, [refreshGratitudeEntries, refreshTasks, isAuthenticated]);
 
   const refreshData = async () => {
     await loadData();
@@ -77,76 +111,29 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
 
   // Update counts when hooks data changes
   useEffect(() => {
-    console.log('GratitudeContext: Updating gratitude count from hook data:', gratitudeEntries.length);
+    console.log('GratitudeProvider: Gratitude entries changed:', gratitudeEntries.length);
     setGratitudeCount(gratitudeEntries.length);
   }, [gratitudeEntries]);
 
   useEffect(() => {
-    console.log('GratitudeContext: Updating task counts from hook data:', tasks.length, 'completed:', tasks.filter(task => task.completed).length);
+    console.log('GratitudeProvider: Tasks changed:', tasks.length);
     setTasksCount(tasks.length);
     setCompletedTasksCount(tasks.filter(task => task.completed).length);
   }, [tasks]);
 
-  // Monitor authentication state changes
-  useEffect(() => {
-    console.log('GratitudeContext: Setting up auth listener...');
-    
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error getting initial session:', error);
-      } else {
-        console.log('GratitudeContext: Initial session:', session?.user?.email);
-        setSession(session);
-      }
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('GratitudeContext: Auth state changed:', event, session?.user?.email);
-      
-      if (event === 'SIGNED_IN' && session) {
-        console.log('GratitudeContext: User signed in, refreshing data...');
-        // Small delay to ensure the session is fully established
-        setTimeout(() => {
-          loadData();
-        }, 500);
-      } else if (event === 'SIGNED_OUT') {
-        console.log('GratitudeContext: User signed out, clearing data...');
-        // Clear all cached data when user signs out
-        setGratitudeCount(0);
-        setTasksCount(0);
-        setCompletedTasksCount(0);
-        setIsLoading(false);
-      }
-      
-      setSession(session);
-    });
-
-    return () => {
-      console.log('GratitudeContext: Cleaning up auth listener');
-      subscription.unsubscribe();
-    };
-  }, [loadData]);
-
   // Load data immediately on mount
   useEffect(() => {
-    console.log('GratitudeContext: Initial load triggered');
+    console.log('GratitudeProvider: Component mounted, calling loadData');
     loadData();
   }, [loadData]);
 
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      console.log('Home screen focused, refreshing gratitude data');
+      console.log('GratitudeProvider: Screen focused, calling loadData');
       loadData();
     }, [loadData])
   );
-
-  // Debug effect to log context value changes
-  useEffect(() => {
-    console.log('GratitudeContext: Context value updated - gratitudeCount:', gratitudeCount, 'tasksCount:', tasksCount, 'completedTasksCount:', completedTasksCount);
-  }, [gratitudeCount, tasksCount, completedTasksCount]);
 
   const value: GratitudeData = {
     gratitudeCount,
@@ -157,6 +144,16 @@ export const GratitudeProvider: React.FC<GratitudeProviderProps> = ({ children }
     updateGratitudeCount,
     updateTaskCounts,
   };
+
+  console.log('GratitudeProvider: Rendering with value:', {
+    gratitudeCount,
+    tasksCount,
+    completedTasksCount,
+    isLoading: value.isLoading,
+    gratitudeLoading,
+    tasksLoading,
+    isAuthenticated
+  });
 
   return (
     <GratitudeContext.Provider value={value}>

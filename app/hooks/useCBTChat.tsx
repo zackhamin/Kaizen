@@ -207,27 +207,15 @@ export function useUpdateCBTConversationTitle() {
 }
 
 export const useCBTChat = ({ conversationId }: UseCBTChatProps): UseCBTChatReturn => {
-  const [messages, setMessages] = useState<CBTMessage[]>([]);
   const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  
+  const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<any>(null);
-
-  // Load messages for the conversation
-  const loadMessages = useCallback(async () => {
-    try {
-      setIsLoadingHistory(true);
-      const msgs = await cbtService.getConversationMessages(conversationId);
-      setMessages(msgs);
-    } catch (error) {
-      console.error('Error loading messages:', error);
-      Alert.alert('Error', 'Failed to load conversation history');
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  }, [conversationId]);
-
+  
+  // Use React Query hooks instead of local state
+  const { data: messages = [], isLoading: isLoadingHistory } = useCBTMessages(conversationId);
+  const addMessageMutation = useAddCBTMessage();
+  const queryClient = useQueryClient();
+  
   // Scroll to end of messages
   const scrollToEnd = useCallback((animated = true) => {
     setTimeout(() => {
@@ -237,87 +225,35 @@ export const useCBTChat = ({ conversationId }: UseCBTChatProps): UseCBTChatRetur
 
   // Send a new message
   const sendMessage = useCallback(async () => {
-    if (!inputText.trim() || isLoading) return;
+    if (!inputText.trim() || isSending) return;
 
     const userMessage = inputText.trim();
-    const tempId = `temp-${Date.now()}`;
-    const aiTempId = `ai-temp-${Date.now()}`;
-    
-    // Add temporary user message for immediate UI feedback
-    const tempUserMsg: CBTMessage = {
-      id: tempId,
-      user_id: '',
-      conversation_id: conversationId,
-      role: 'user',
-      content: userMessage,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      metadata: {
-        isTemporary: true
-      }
-    };
-
-    // Add temporary AI message for loading state
-    const tempAiMsg: CBTMessage = {
-      id: aiTempId,
-      user_id: '',
-      conversation_id: conversationId,
-      role: 'assistant',
-      content: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      metadata: {
-        isLoading: true
-      }
-    };
-
-    setMessages(prev => [...prev, tempUserMsg, tempAiMsg]);
     setInputText('');
-    setIsLoading(true);
-    scrollToEnd();
-
+    setIsSending(true);
+    
     try {
-      // Send message to service and get AI response
-      const aiMessage = await cbtService.sendMessage(conversationId, userMessage);
+      // Use the service method that handles both user message and AI response
+      await cbtService.sendMessage(conversationId, userMessage);
       
-      // Update the temporary AI message with the real response
-      setMessages(prev => prev.map(msg => 
-        msg.id === aiTempId 
-          ? { ...aiMessage, metadata: { isTemporary: false } }
-          : msg.id === tempId
-          ? { ...msg, metadata: { isTemporary: false } }
-          : msg
-      ));
+      // Invalidate the messages query to refetch the updated conversation
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(conversationId) });
       
       scrollToEnd();
       
     } catch (error) {
       console.error('Error sending message:', error);
-      
-      // Remove temporary messages on error
-      setMessages(prev => prev.filter(msg => msg.id !== tempId && msg.id !== aiTempId));
-      
+      setInputText(userMessage); // Restore on error
       Alert.alert('Error', 'Failed to send message. Please try again.');
-      
-      // Restore input text so user can try again
-      setInputText(userMessage);
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
     }
-  }, [inputText, isLoading, conversationId, scrollToEnd]);
+  }, [inputText, conversationId, isSending, scrollToEnd, queryClient]);
 
   // Refresh messages
   const refresh = useCallback(async () => {
-    await loadMessages();
+    // React Query handles this automatically via refetch
     scrollToEnd(false);
-  }, [loadMessages, scrollToEnd]);
-
-  // Load messages when conversation changes
-  useEffect(() => {
-    if (conversationId) {
-      loadMessages();
-    }
-  }, [conversationId, loadMessages]);
+  }, [scrollToEnd]);
 
   // Auto-scroll when new messages are added
   useEffect(() => {
@@ -330,7 +266,7 @@ export const useCBTChat = ({ conversationId }: UseCBTChatProps): UseCBTChatRetur
     messages,
     inputText,
     setInputText,
-    isLoading,
+    isLoading: isSending,
     isLoadingHistory,
     sendMessage,
     scrollToEnd,

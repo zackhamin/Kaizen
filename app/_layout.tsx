@@ -55,35 +55,23 @@ export default function RootLayout() {
     };
   }, []);
 
+  // Handle basic navigation based on auth state
   useEffect(() => {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
-    const inCommunityPage = segments[0] === 'community' || segments[0] === 'thread';
-    const inOtherPages = segments[0] === 'communities' || segments[0] === 'gratitude' || segments[0] === 'settings' || segments[0] === 'create-thread';
     
     console.log('Navigation check:', {
       hasUser: !!session?.user,
       inAuthGroup,
-      inTabsGroup,
-      inCommunityPage,
-      inOtherPages,
       segments
     });
 
-    // Only redirect if user is not authenticated and not already in auth group
+    // Only redirect to auth if user is not authenticated and not already in auth group
     if (!session?.user && !inAuthGroup) {
       console.log('No user, redirecting to auth');
       router.replace('/(auth)/sign-in');
-    } 
-    // Only redirect to main app if user is authenticated but in auth group
-    else if (session?.user && inAuthGroup) {
-      console.log('User found in auth group, redirecting to main app');
-      router.replace('/(tabs)');
     }
-    // Don't redirect if user is authenticated and on any valid page
-    // This prevents the app from resetting when auth state refreshes
   }, [session, segments, isLoading]);
 
   // Show loading spinner while checking auth
@@ -92,7 +80,10 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <GratitudeProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <SplashScreen />
+            <SplashScreen 
+              isReady={false}
+              onReady={() => {}}
+            />
           </GestureHandlerRootView>
         </GratitudeProvider>
       </QueryClientProvider>
