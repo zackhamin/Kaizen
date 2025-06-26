@@ -1,5 +1,5 @@
 import { useGratitudeData } from '@/app/context/GratitudeContext';
-import { useTasks } from '@/app/hooks/useTasks';
+import { useCreateTask, useDeleteTask, useTasks, useToggleTask } from '@/app/hooks/useTasks';
 import { colors } from '@/constants/theme';
 import React, { useEffect, useState } from 'react';
 import {
@@ -21,18 +21,12 @@ const { width: screenWidth } = Dimensions.get('window');
 
 const Todos: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
-  const [addingTask, setAddingTask] = useState(false);
 
-  // Use the modern hook
-  const { 
-    tasks: todos, 
-    loading, 
-    error, 
-    addTask, 
-    toggleTask, 
-    deleteTask, 
-    refreshTasks 
-  } = useTasks();
+  // Use React Query hooks instead of legacy hook
+  const { data: todos = [], isLoading: loading, refetch: refreshTasks } = useTasks();
+  const createTaskMutation = useCreateTask();
+  const toggleTaskMutation = useToggleTask();
+  const deleteTaskMutation = useDeleteTask();
 
   // Get context methods to update daily goals
   const { updateTaskCounts } = useGratitudeData();
@@ -44,23 +38,20 @@ const Todos: React.FC = () => {
   }, [todos, updateTaskCounts]);
 
   const handleAddTodo = async (): Promise<void> => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || createTaskMutation.isPending) return;
 
     try {
-      setAddingTask(true);
-      await addTask(inputText.trim());
+      await createTaskMutation.mutateAsync(inputText.trim());
       setInputText('');
     } catch (error) {
       console.error('Error adding task:', error);
       Alert.alert('Error', 'Failed to add task');
-    } finally {
-      setAddingTask(false);
     }
   };
 
   const handleToggleTodo = async (id: string): Promise<void> => {
     try {
-      await toggleTask(id);
+      await toggleTaskMutation.mutateAsync(id);
     } catch (error) {
       console.error('Error toggling task:', error);
       Alert.alert('Error', 'Failed to update task');
@@ -78,7 +69,7 @@ const Todos: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteTask(id);
+              await deleteTaskMutation.mutateAsync(id);
             } catch (error) {
               console.error('Error deleting task:', error);
               Alert.alert('Error', 'Failed to delete task');
@@ -150,15 +141,15 @@ const Todos: React.FC = () => {
               onSubmitEditing={handleAddTodo}
               returnKeyType="done"
               multiline={false}
-              editable={!addingTask}
+              editable={!createTaskMutation.isPending}
             />
             <TouchableOpacity 
-              style={[styles.addButton, addingTask && styles.addButtonDisabled]} 
+              style={[styles.addButton, createTaskMutation.isPending && styles.addButtonDisabled]} 
               onPress={handleAddTodo}
               activeOpacity={0.8}
-              disabled={addingTask}
+              disabled={createTaskMutation.isPending}
             >
-              {addingTask ? (
+              {createTaskMutation.isPending ? (
                 <ActivityIndicator size="small" color={colors.accent.white} />
               ) : (
                 <Text style={styles.addButtonText}>+</Text>

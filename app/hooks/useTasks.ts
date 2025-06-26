@@ -1,100 +1,186 @@
+import { supabase } from '@/lib/supabase';
 import { Task, taskService } from '@/services/task.service.modern';
-import { useCallback, useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
-interface UseTasksReturn {
-  tasks: Task[];
-  loading: boolean;
-  error: string | null;
-  addTask: (text: string) => Promise<void>;
-  toggleTask: (id: string) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
-  updateTaskText: (id: string, text: string) => Promise<void>;
-  refreshTasks: () => Promise<void>;
+// Query keys
+export const queryKeys = {
+  tasks: ['tasks'] as const,
+};
+
+// Hook for fetching tasks
+export function useTasks(enabled: boolean = true) {
+  return useQuery({
+    queryKey: queryKeys.tasks,
+    queryFn: async () => {
+      console.log('useTasks: Fetching tasks...');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('useTasks: No user found, skipping fetch');
+        throw new Error('User not authenticated');
+      }
+      console.log('useTasks: User authenticated, fetching tasks for:', user.id);
+      const tasks = await taskService.getCurrentUserTasks();
+      console.log('useTasks: Fetched tasks:', tasks.length);
+      return tasks;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    enabled: enabled, // Only enabled when auth is ready
+    retry: (failureCount, error: any) => {
+      // Don't retry if user is not authenticated
+      if (error?.message === 'User not authenticated') {
+        return false;
+      }
+      return failureCount < 3;
+    },
+  });
 }
 
-export const useTasks = (): UseTasksReturn => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Hook for creating a task
+export function useCreateTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (text: string) => taskService.createTask(text),
+    onSuccess: (newTask) => {
+      // Optimistically add to tasks list
+      queryClient.setQueryData(
+        queryKeys.tasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return [newTask];
+          return [newTask, ...oldData];
+        }
+      );
+      
+      // Invalidate to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    },
+  });
+}
 
-  const loadTasks = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await taskService.getCurrentUserTasks();
-      setTasks(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load tasks');
-      console.error('Error loading tasks:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+// Hook for toggling a task
+export function useToggleTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => taskService.toggleTask(id),
+    onSuccess: (updatedTask) => {
+      // Update in tasks list
+      queryClient.setQueryData(
+        queryKeys.tasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.map(task => 
+            task.id === updatedTask.id ? updatedTask : task
+          );
+        }
+      );
+      
+      // Invalidate to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    },
+  });
+}
+
+// Hook for deleting a task
+export function useDeleteTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => taskService.softDeleteTask(id),
+    onSuccess: (_, deletedId) => {
+      // Remove from tasks list
+      queryClient.setQueryData(
+        queryKeys.tasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.filter(task => task.id !== deletedId);
+        }
+      );
+      
+      // Invalidate to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    },
+  });
+}
+
+// Hook for updating task text
+export function useUpdateTaskText() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, text }: { id: string; text: string }) => 
+      taskService.updateTaskText(id, text),
+    onSuccess: (updatedTask) => {
+      // Update in tasks list
+      queryClient.setQueryData(
+        queryKeys.tasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.map(task => 
+            task.id === updatedTask.id ? updatedTask : task
+          );
+        }
+      );
+      
+      // Invalidate to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    },
+  });
+}
+
+// Legacy hook for backward compatibility
+export const useTasksLegacy = () => {
+  const { data: tasks = [], isLoading: loading, error, refetch } = useTasks();
+  const createMutation = useCreateTask();
+  const toggleMutation = useToggleTask();
+  const deleteMutation = useDeleteTask();
+  const updateMutation = useUpdateTaskText();
 
   const addTask = useCallback(async (text: string) => {
     try {
-      setError(null);
-      const newTask = await taskService.createTask(text);
-      setTasks(prev => [newTask, ...prev]);
+      await createMutation.mutateAsync(text);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add task');
       console.error('Error adding task:', err);
       throw err;
     }
-  }, []);
+  }, [createMutation]);
 
   const toggleTask = useCallback(async (id: string) => {
     try {
-      setError(null);
-      const updatedTask = await taskService.toggleTask(id);
-      setTasks(prev => prev.map(task => 
-        task.id === id ? updatedTask : task
-      ));
+      await toggleMutation.mutateAsync(id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update task');
       console.error('Error toggling task:', err);
       throw err;
     }
-  }, []);
+  }, [toggleMutation]);
 
   const deleteTask = useCallback(async (id: string) => {
     try {
-      setError(null);
-      await taskService.softDeleteTask(id);
-      setTasks(prev => prev.filter(task => task.id !== id));
+      await deleteMutation.mutateAsync(id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete task');
       console.error('Error deleting task:', err);
       throw err;
     }
-  }, []);
+  }, [deleteMutation]);
 
   const updateTaskText = useCallback(async (id: string, text: string) => {
     try {
-      setError(null);
-      const updatedTask = await taskService.updateTaskText(id, text);
-      setTasks(prev => prev.map(task => 
-        task.id === id ? updatedTask : task
-      ));
+      await updateMutation.mutateAsync({ id, text });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update task');
       console.error('Error updating task text:', err);
       throw err;
     }
-  }, []);
+  }, [updateMutation]);
 
   const refreshTasks = useCallback(async () => {
-    await loadTasks();
-  }, [loadTasks]);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+    await refetch();
+  }, [refetch]);
 
   return {
     tasks,
     loading,
-    error,
+    error: error?.message || null,
     addTask,
     toggleTask,
     deleteTask,

@@ -1,13 +1,47 @@
 import { colors, theme } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 interface SplashScreenProps {
   message?: string;
+  onReady?: () => void;
+  isReady?: boolean;
 }
 
-export const SplashScreen: React.FC<SplashScreenProps> = ({ message = 'Loading...' }) => {
+export const SplashScreen: React.FC<SplashScreenProps> = ({ 
+  message = 'Loading...',
+  onReady,
+  isReady = false
+}) => {
+  const [startTime] = useState(Date.now());
+  const [canHide, setCanHide] = useState(false);
+
+  useEffect(() => {
+    const checkMinimumTime = () => {
+      const elapsed = Date.now() - startTime;
+      const minimumTime = 1000; // 1 second minimum
+
+      if (elapsed >= minimumTime && isReady) {
+        setCanHide(true);
+        onReady?.();
+      } else if (elapsed >= minimumTime) {
+        setCanHide(true);
+      } else {
+        // If minimum time hasn't passed, check again
+        const remainingTime = minimumTime - elapsed;
+        setTimeout(checkMinimumTime, remainingTime);
+      }
+    };
+
+    checkMinimumTime();
+  }, [startTime, isReady, onReady]);
+
+  // Don't render anything if we can hide and are ready
+  if (canHide && isReady) {
+    return null;
+  }
+
   return (
     <View style={styles.container}>
       <LinearGradient

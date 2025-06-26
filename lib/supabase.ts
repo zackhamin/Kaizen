@@ -12,7 +12,6 @@ const ExpoSecureStoreAdapter = {
   getItem: async (key: string) => {
     try {
       const value = await SecureStore.getItemAsync(key);
-      console.log('SecureStore getItem:', key, value ? 'found' : 'not found');
       return value;
     } catch (error) {
       console.error('SecureStore getItem error:', error);
@@ -22,7 +21,6 @@ const ExpoSecureStoreAdapter = {
   setItem: async (key: string, value: string) => {
     try {
       await SecureStore.setItemAsync(key, value);
-      console.log('SecureStore setItem:', key, 'saved successfully');
     } catch (error) {
       console.error('SecureStore setItem error:', error);
     }
@@ -30,7 +28,6 @@ const ExpoSecureStoreAdapter = {
   removeItem: async (key: string) => {
     try {
       await SecureStore.deleteItemAsync(key);
-      console.log('SecureStore removeItem:', key, 'removed successfully');
     } catch (error) {
       console.error('SecureStore removeItem error:', error);
     }

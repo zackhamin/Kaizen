@@ -16,11 +16,20 @@ export function useCurrentUser() {
   
   const query = useQuery({
     queryKey: queryKeys.currentUser,
-    queryFn: () => userService.getCurrentUser(),
+    queryFn: async () => {
+      // Check if user is authenticated before making the API call
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      console.log('useCurrentUser: User authenticated, fetching profile for:', user.id);
+      return userService.getCurrentUser();
+    },
     staleTime: 1000 * 30, // 30 seconds - more aggressive for user data
     gcTime: 1000 * 60 * 2, // 2 minutes cache time
     retry: 2,
     refetchOnWindowFocus: true, // Refetch when app comes back to focus
+    enabled: true, // Always enabled, but will throw error if no user
   });
 
   // Monitor authentication state changes to invalidate user cache
