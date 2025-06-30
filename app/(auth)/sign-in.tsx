@@ -37,7 +37,7 @@ export default function SignInScreen() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: 'exp://192.168.1.100:8081/--/(tabs)',
+          redirectTo: '(tabs)/',
         },
       });
 

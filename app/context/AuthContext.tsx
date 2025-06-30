@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { registerPushNotifications } from '../utils/registerPushNotifications';
 
 // Auth context interface - simplified
 interface AuthContextType {
@@ -101,6 +102,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       subscription.unsubscribe();
     };
   }, [queryClient]);
+
+  useEffect(() => {
+    if(user) {
+      const getToken = async () => {
+        const token = await registerPushNotifications();
+        console.log('AuthProvider: Push notification token:', token);
+      };
+      getToken();
+    }
+  }, [user]);
 
   // Sign in function
   const signIn = async (email: string, password: string) => {

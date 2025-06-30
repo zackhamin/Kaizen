@@ -2,6 +2,7 @@ import GradientBackground from '@/components/Layout/GradientBackground';
 import { useCurrentUser } from '@/hooks/useUser';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
@@ -36,6 +37,8 @@ export default function ProfileScreen() {
               
               // Sign out using AuthContext
               await signOut();
+
+              router.replace('/(auth)/sign-in');
               
               console.log('User signed out successfully');
               // AuthContext will handle navigation automatically
