@@ -30,7 +30,7 @@ components/
 ├── HomeCards/        # Home screen specific cards
 ├── Layout/           # Layout wrapper components
 ├── Modals/           # Modal components
-├── Todos/            # Task/wins components
+├── Todos/            # Task/targets components
 constants/
 ├── theme.ts          # Global theme configuration
 services/

@@ -1,58 +1,63 @@
-import { supabase } from '@/lib/supabase';
 import { Task, taskService } from '@/services/task.service.modern';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
 // Query keys
 export const queryKeys = {
-  tasks: ['tasks'] as const,
+  everydayTasks: ['tasks', 'everyday'] as const,
+  todayTasks: ['tasks', 'today'] as const,
 };
 
-// Hook for fetching tasks
-export function useTasks() {
+// Hook for fetching everyday tasks
+export function useEverydayTasks() {
   return useQuery({
-    queryKey: queryKeys.tasks,
-    queryFn: async () => {
-      console.log('useTasks: Fetching tasks...');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('useTasks: No user found, skipping fetch');
-        throw new Error('User not authenticated');
-      }
-      console.log('useTasks: User authenticated, fetching tasks for:', user.id);
-      const tasks = await taskService.getCurrentUserTasks();
-      console.log('useTasks: Fetched tasks:', tasks.length);
-      return tasks;
-    },
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    retry: (failureCount, error: any) => {
-      // Don't retry if user is not authenticated
-      if (error?.message === 'User not authenticated') {
-        return false;
-      }
-      return failureCount < 3;
-    },
+    queryKey: queryKeys.everydayTasks,
+    queryFn: () => taskService.getEverydayTasks(),
+    staleTime: 1000 * 60 * 2,
   });
 }
 
-// Hook for creating a task
-export function useCreateTask() {
+// Hook for fetching today's tasks
+export function useTodayTasks() {
+  return useQuery({
+    queryKey: queryKeys.todayTasks,
+    queryFn: () => taskService.getTodayTasks(),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+// Hook for creating an everyday task
+export function useCreateEverydayTask() {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: (text: string) => taskService.createTask(text),
+    mutationFn: (text: string) => taskService.createTask(text, 'everyday'),
     onSuccess: (newTask) => {
-      // Optimistically add to tasks list
       queryClient.setQueryData(
-        queryKeys.tasks,
+        queryKeys.everydayTasks,
         (oldData: Task[] | undefined) => {
           if (!oldData) return [newTask];
           return [newTask, ...oldData];
         }
       );
-      
-      // Invalidate to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.everydayTasks });
+    },
+  });
+}
+
+// Hook for creating a today task
+export function useCreateTodayTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (text: string) => taskService.createTask(text, 'today'),
+    onSuccess: (newTask) => {
+      queryClient.setQueryData(
+        queryKeys.todayTasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return [newTask];
+          return [newTask, ...oldData];
+        }
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.todayTasks });
     },
   });
 }
@@ -66,7 +71,17 @@ export function useToggleTask() {
     onSuccess: (updatedTask) => {
       // Update in tasks list
       queryClient.setQueryData(
-        queryKeys.tasks,
+        queryKeys.everydayTasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.map((task: Task) => 
+            task.id === updatedTask.id ? updatedTask : task
+          );
+        }
+      );
+      
+      queryClient.setQueryData(
+        queryKeys.todayTasks,
         (oldData: Task[] | undefined) => {
           if (!oldData) return oldData;
           return oldData.map((task: Task) => 
@@ -76,7 +91,8 @@ export function useToggleTask() {
       );
       
       // Invalidate to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.everydayTasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.todayTasks });
     },
   });
 }
@@ -90,7 +106,15 @@ export function useDeleteTask() {
     onSuccess: (_, deletedId) => {
       // Remove from tasks list
       queryClient.setQueryData(
-        queryKeys.tasks,
+        queryKeys.everydayTasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.filter((task: Task) => task.id !== deletedId);
+        }
+      );
+      
+      queryClient.setQueryData(
+        queryKeys.todayTasks,
         (oldData: Task[] | undefined) => {
           if (!oldData) return oldData;
           return oldData.filter((task: Task) => task.id !== deletedId);
@@ -98,7 +122,8 @@ export function useDeleteTask() {
       );
       
       // Invalidate to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.everydayTasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.todayTasks });
     },
   });
 }
@@ -113,7 +138,17 @@ export function useUpdateTaskText() {
     onSuccess: (updatedTask) => {
       // Update in tasks list
       queryClient.setQueryData(
-        queryKeys.tasks,
+        queryKeys.everydayTasks,
+        (oldData: Task[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.map((task: Task) => 
+            task.id === updatedTask.id ? updatedTask : task
+          );
+        }
+      );
+      
+      queryClient.setQueryData(
+        queryKeys.todayTasks,
         (oldData: Task[] | undefined) => {
           if (!oldData) return oldData;
           return oldData.map((task: Task) => 
@@ -123,27 +158,29 @@ export function useUpdateTaskText() {
       );
       
       // Invalidate to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.everydayTasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.todayTasks });
     },
   });
 }
 
 // Legacy hook for backward compatibility
 export const useTasksLegacy = () => {
-  const { data: tasks = [], isLoading: loading, error, refetch } = useTasks();
-  const createMutation = useCreateTask();
+  const { data: everydayTasks = [], isLoading: loadingEveryday, error: errorEveryday, refetch: refetchEveryday } = useEverydayTasks();
+  const { data: todayTasks = [], isLoading: loadingToday, error: errorToday, refetch: refetchToday } = useTodayTasks();
+  const createTodayMutation = useCreateTodayTask();
   const toggleMutation = useToggleTask();
   const deleteMutation = useDeleteTask();
   const updateMutation = useUpdateTaskText();
 
   const addTask = useCallback(async (text: string) => {
     try {
-      await createMutation.mutateAsync(text);
+      await createTodayMutation.mutateAsync(text);
     } catch (err) {
-      console.error('Error adding task:', err);
+      console.error('Error adding today task:', err);
       throw err;
     }
-  }, [createMutation]);
+  }, [createTodayMutation]);
 
   const toggleTask = useCallback(async (id: string) => {
     try {
@@ -173,13 +210,15 @@ export const useTasksLegacy = () => {
   }, [updateMutation]);
 
   const refreshTasks = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
+    await refetchEveryday();
+    await refetchToday();
+  }, [refetchEveryday, refetchToday]);
 
   return {
-    tasks,
-    loading,
-    error: error?.message || null,
+    everydayTasks,
+    todayTasks,
+    loading: loadingEveryday || loadingToday,
+    error: errorEveryday?.message || errorToday?.message || null,
     addTask,
     toggleTask,
     deleteTask,

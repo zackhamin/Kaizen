@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kaizen",
     "slug": "brotherhood",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "Kaizen",
@@ -26,6 +26,12 @@
         "projectId": "fa1387c6-32e3-474b-ab00-2951a34fd343"
       }
     },
-    "owner": "ishaqamin"
+    "owner": "ishaqamin",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fa1387c6-32e3-474b-ab00-2951a34fd343"
+    }
   }
 }

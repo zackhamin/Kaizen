@@ -9,6 +9,8 @@ export interface Task {
   created_at: string;
   updated_at: string;
   deleted_at?: string;
+  type: 'everyday' | 'today';
+  task_date?: string | null;
 }
 
 // Modern functional service using RPC functions
@@ -31,17 +33,66 @@ export const taskService = {
     }
   },
 
-  // Create a new task
-  async createTask(text: string): Promise<Task> {
+  // Get all everyday tasks for current user
+  async getEverydayTasks(): Promise<Task[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', 'everyday')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching everyday tasks:', error);
+      throw error;
+    }
+  },
 
-      const { data, error } = await supabase.rpc('create_user_task', {
-        p_user_id: user.id,
-        task_text: text.trim()
-      });
+  // Get all today's tasks for current user
+  async getTodayTasks(): Promise<Task[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', 'today')
+        .eq('task_date', today)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching today tasks:', error);
+      throw error;
+    }
+  },
 
+  // Create a new task (with type and optional task_date)
+  async createTask(text: string, type: 'everyday' | 'today' = 'today', task_date?: string): Promise<Task> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      const insertData: any = {
+        user_id: user.id,
+        text: text.trim(),
+        type,
+      };
+      if (type === 'today') {
+        insertData.task_date = task_date || new Date().toISOString().slice(0, 10);
+      }
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([insertData])
+        .select()
+        .single();
       if (error) throw error;
       return data;
     } catch (error) {

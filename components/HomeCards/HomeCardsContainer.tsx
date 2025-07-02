@@ -1,6 +1,6 @@
 import { colors, theme } from '@/constants/theme';
 import { useGratitudeEntries } from '@/hooks/useGratitude';
-import { useTasks } from '@/hooks/useTasks';
+import { useTodayTasks } from '@/hooks/useTasks';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -8,7 +8,7 @@ import { HomeCard } from './HomeCard';
 
 export const HomeCardsContainer: React.FC = () => {
   const { data: gratitudeEntries = [], isLoading: gratitudeLoading } = useGratitudeEntries();
-  const { data: tasks = [], isLoading: tasksLoading } = useTasks();
+  const { data: tasks = [], isLoading: tasksLoading } = useTodayTasks();
   
   const gratitudeCount = gratitudeEntries.length;
   const tasksCount = tasks.length;
@@ -22,7 +22,7 @@ export const HomeCardsContainer: React.FC = () => {
   };
 
   const handleTasksPress = () => {
-    router.push('/(tabs)/wins');
+    router.push('/(tabs)/targets');
   };
 
   const handleCBTPress = () => {
@@ -54,15 +54,15 @@ export const HomeCardsContainer: React.FC = () => {
         <View style={styles.row}>
           <HomeCard
             title="Appreciations"
-            subtitle="What makes today worth your energy."
+            subtitle="Gratitude, Brother."
             count={gratitudeCount}
             maxCount={3}
             onPress={handleGratitudePress}
             style={styles.card}
           />
           <HomeCard
-            title="Daily targets"
-            subtitle="What will you tackle today?"
+            title="Daily Targets"
+            subtitle="You can do it."
             count={completedTasksCount}
             maxCount={tasksCount || 1}
             onPress={handleTasksPress}

@@ -1,6 +1,12 @@
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { colors } from '@/constants/theme';
-import { useCreateTask, useDeleteTask, useTasks, useToggleTask } from '@/hooks/useTasks';
+import {
+  useCreateEverydayTask,
+  useDeleteTask,
+  useEverydayTasks,
+  useToggleTask,
+} from '@/hooks/useTasks';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -12,36 +18,31 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import { AddTaskModal } from './AddTaskModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export const Todos: React.FC = () => {
   const [inputText, setInputText] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
-  // Use React Query hooks instead of legacy hook
-  const { data: todos = [], isLoading: loading, refetch: refreshTasks } = useTasks();
-  const createTaskMutation = useCreateTask();
+  // Everyday Tasks
+  const {
+    data: everydayTasks = [],
+    isLoading: loadingEveryday,
+    refetch: refetchEveryday,
+  } = useEverydayTasks();
+
+  const createEverydayTaskMutation = useCreateEverydayTask();
   const toggleTaskMutation = useToggleTask();
   const deleteTaskMutation = useDeleteTask();
 
-  const handleAddTodo = async (): Promise<void> => {
-    if (!inputText.trim() || createTaskMutation.isPending) return;
-
-    try {
-      await createTaskMutation.mutateAsync(inputText.trim());
-      setInputText('');
-    } catch (error) {
-      console.error('Error adding task:', error);
-      Alert.alert('Error', 'Failed to add task');
-    }
-  };
-
-  const handleToggleTodo = async (id: string): Promise<void> => {
+  const handleToggleTask = async (id: string): Promise<void> => {
     try {
       await toggleTaskMutation.mutateAsync(id);
     } catch (error) {
@@ -50,10 +51,10 @@ export const Todos: React.FC = () => {
     }
   };
 
-  const handleDeleteTodo = async (id: string): Promise<void> => {
+  const handleDeleteTask = async (id: string): Promise<void> => {
     Alert.alert(
       'Delete Task',
-      'Are you sure you want to delete this task?',
+      'Delete this task? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -62,31 +63,44 @@ export const Todos: React.FC = () => {
           onPress: async () => {
             try {
               await deleteTaskMutation.mutateAsync(id);
+              refetchEveryday();
             } catch (error) {
               console.error('Error deleting task:', error);
               Alert.alert('Error', 'Failed to delete task');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
 
-  const remainingTasks = todos.filter(task => !task.completed).length;
+  // Handler for modal save
+  const handleModalSave = async (_taskType: 'everyday', text: string) => {
+    setIsSaving(true);
+    try {
+      await createEverydayTaskMutation.mutateAsync(text);
+      refetchEveryday();
+      setModalVisible(false);
+    } catch (e) {
+      // Error handled in modal
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-  const renderTaskItem = ({ item }: { item: any }) => (
+  const renderEverydayTask = ({ item }: { item: any }) => (
     <View style={styles.taskItem}>
       <TouchableOpacity
         style={[styles.checkbox, item.completed && styles.checkboxChecked]}
-        onPress={() => handleToggleTodo(item.id)}
+        onPress={() => handleToggleTask(item.id)}
         activeOpacity={0.7}
       >
         {item.completed && <Text style={styles.checkmark}>✓</Text>}
       </TouchableOpacity>
-      <Text 
+      <Text
         style={[
-          styles.taskText, 
-          item.completed && styles.taskTextCompleted
+          styles.taskText,
+          item.completed && styles.taskTextCompleted,
         ]}
         numberOfLines={0}
       >
@@ -94,15 +108,15 @@ export const Todos: React.FC = () => {
       </Text>
       <TouchableOpacity
         style={styles.deleteButton}
-        onPress={() => handleDeleteTodo(item.id)}
+        onPress={() => handleDeleteTask(item.id)}
         activeOpacity={0.7}
       >
-        <Text style={styles.deleteButtonText}>×</Text>
+        <MaterialIcons name="delete" size={22} color={colors.accent.white} />
       </TouchableOpacity>
     </View>
   );
 
-  if (loading) {
+  if (loadingEveryday) {
     return (
       <GradientBackground showHeader={false}>
         <View style={styles.loadingContainer}>
@@ -115,56 +129,41 @@ export const Todos: React.FC = () => {
 
   return (
     <GradientBackground showHeader={false}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Small Wins For Today</Text>
-          
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Add new task"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              value={inputText}
-              onChangeText={setInputText}
-              onSubmitEditing={handleAddTodo}
-              returnKeyType="done"
-              multiline={false}
-              editable={!createTaskMutation.isPending}
-            />
-            <TouchableOpacity 
-              style={[styles.addButton, createTaskMutation.isPending && styles.addButtonDisabled]} 
-              onPress={handleAddTodo}
-              activeOpacity={0.8}
-              disabled={createTaskMutation.isPending}
+          {/* Everyday Tasks Section */}
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Everyday Tasks</Text>
+            <TouchableOpacity
+              style={styles.addButtonInline}
+              onPress={() => setModalVisible(true)}
+              activeOpacity={0.85}
             >
-              {createTaskMutation.isPending ? (
-                <ActivityIndicator size="small" color={colors.accent.white} />
-              ) : (
-                <Text style={styles.addButtonText}>+</Text>
-              )}
+              <Text style={styles.addButtonInlineText}>Add</Text>
             </TouchableOpacity>
           </View>
-
+          <Text style={styles.emptyText}>Building a routine is a great way to improve your mental health.
+            Here you can add your non-negotiable daily tasks. These will untick everyday at midnight.</Text>
           <FlatList
-            data={todos}
-            renderItem={renderTaskItem}
+            data={everydayTasks}
+            renderItem={renderEverydayTask}
             keyExtractor={(item) => item.id}
             style={styles.taskList}
             contentContainerStyle={styles.taskListContent}
             showsVerticalScrollIndicator={false}
-            refreshing={loading}
-            onRefresh={refreshTasks}
           />
-
-          <Text style={styles.remainingText}>
-            Your remaining tasks: {remainingTasks}
-          </Text>
         </View>
       </KeyboardAvoidingView>
+      <AddTaskModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSave={handleModalSave}
+        isSaving={isSaving}
+      />
     </GradientBackground>
   );
 };
@@ -192,15 +191,21 @@ const styles = StyleSheet.create({
     maxWidth: screenWidth,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 24,
+    marginBottom: 12,
     color: colors.accent.white,
-    textAlign: 'left',
+    textAlign: 'center',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginVertical: 18,
+    borderRadius: 1,
   },
   inputContainer: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 18,
     alignItems: 'center',
     width: '100%',
   },
@@ -234,10 +239,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   taskList: {
-    flex: 1,
+    flexGrow: 0,
   },
   taskListContent: {
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
   taskItem: {
     flexDirection: 'row',
@@ -245,7 +250,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
@@ -282,7 +287,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
@@ -296,7 +300,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.accent.white,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 10,
     opacity: 0.8,
+  },
+  emptyText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 15,
+    marginBottom: 10,
+    textAlign: 'left',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  addButtonInline: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 12,
+    width: 56,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  addButtonInlineText: {
+    color: colors.accent.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
 }); 

@@ -1,6 +1,6 @@
 import { colors, theme } from '@/constants/theme';
 import { useGratitudeEntries } from '@/hooks/useGratitude';
-import { useTasks } from '@/hooks/useTasks';
+import { useEverydayTasks } from '@/hooks/useTasks';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -14,11 +14,13 @@ interface DailyGoal {
 
 export const DailyGoals: React.FC = () => {
   const { data: gratitudeEntries = [], isLoading: gratitudeLoading } = useGratitudeEntries();
-  const { data: tasks = [], isLoading: tasksLoading } = useTasks();
+  const { data: tasks = [], isLoading: tasksLoading } = useEverydayTasks();
 
   const gratitudeCount = gratitudeEntries.length;
   const completedTasksCount = tasks.filter(task => task.completed).length;
   const isLoading = gratitudeLoading || tasksLoading;
+
+  const switchText = completedTasksCount === 0 ? 'Set some tasks to complete today' : `You have ${tasks.length - completedTasksCount} tasks to complete today`;
 
   const goals: DailyGoal[] = [
     {
@@ -29,8 +31,8 @@ export const DailyGoals: React.FC = () => {
     },
     {
       id: 'task',
-      text: 'Complete 1 daily target',
-      isCompleted: completedTasksCount >= 1,
+      text: switchText,
+      isCompleted: completedTasksCount === tasks.length,
       icon: 'checkmark-circle'
     }
   ];
@@ -110,8 +112,7 @@ const styles = StyleSheet.create({
   },
   goalText: {
     fontSize: 16,
-    color: colors.glass.text.primary,
-    marginLeft: theme.spacing.sm,
+    color: colors.glass.text.primary,                     
     flex: 1,
   },
   goalTextCompleted: {

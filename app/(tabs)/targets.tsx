@@ -3,7 +3,7 @@ import { Todos } from '@/components/Todos/Todos';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-export default function WinsScreen() {
+export default function TargetsScreen() {
 
   return (
     <GradientBackground showHeader={false}>      
