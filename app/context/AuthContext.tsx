@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase';
+import { registerPushNotifications } from '@/utils/registerPushNotifications';
 import { Session, User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { registerPushNotifications } from '../utils/registerPushNotifications';
 
 // Auth context interface - simplified
 interface AuthContextType {

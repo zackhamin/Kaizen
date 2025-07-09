@@ -2,13 +2,14 @@
   "expo": {
     "name": "Kaizen",
     "slug": "brotherhood",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "Kaizen",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hya.kaizen",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
