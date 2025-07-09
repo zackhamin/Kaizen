@@ -12,7 +12,8 @@ interface AddImageModalProps {
 }
 
 export const AddImageModal: React.FC<AddImageModalProps> = ({ visible, onClose, onAdd, isSaving }) => {
-  const [galleryImage, setGalleryImage] = useState<string | null>(null);
+  // Update state to hold both uri and base64
+  const [galleryImage, setGalleryImage] = useState<{ uri: string; base64: string } | null>(null);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,12 +21,16 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({ visible, onClose, 
   const handlePickImage = async () => {
     setError('');
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'], // Fix for expo-image-picker type
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 0.8,
+      base64: true, // request base64
     });
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setGalleryImage(result.assets[0].uri);
+      setGalleryImage({
+        uri: result.assets[0].uri,
+        base64: result.assets[0].base64 || '',
+      });
     }
   };
 
@@ -39,8 +44,10 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({ visible, onClose, 
     setUploading(true);
     
     try {
-      // Use the service to handle everything
-      const imageRecord = await visionBoardService.uploadAndCreateImage(galleryImage);
+      const imageRecord = await visionBoardService.uploadAndCreateImage({
+        imageUri: galleryImage.uri,
+        base64: galleryImage.base64,
+      });
       await onAdd(imageRecord.url);
       setGalleryImage(null);
       onClose();
@@ -79,7 +86,7 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({ visible, onClose, 
             <Text style={styles.galleryButtonText}>Choose from Gallery</Text>
           </TouchableOpacity>
           {galleryImage ? (
-            <Image source={{ uri: galleryImage }} style={styles.preview} resizeMode="cover" />
+            <Image source={{ uri: galleryImage.uri }} style={styles.preview} resizeMode="cover" />
           ) : null}
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <View style={styles.buttonRow}>

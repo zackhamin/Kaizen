@@ -9,6 +9,17 @@ export interface VisionBoardImage {
   updated_at: string;
 }
 
+// Helper to convert base64 to Uint8Array
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binaryString = typeof atob !== 'undefined' ? atob(base64) : Buffer.from(base64, 'base64').toString('binary');
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
 // Simple functional service - no RPC functions, no complex triggers
 export const visionBoardService = {
   // Create a new vision board image
@@ -149,7 +160,7 @@ export const visionBoardService = {
   },
 
   // Upload image file and create database record
-  async uploadAndCreateImage(imageUri: string): Promise<VisionBoardImage> {
+  async uploadAndCreateImage({ imageUri, base64 }: { imageUri: string; base64: string }): Promise<VisionBoardImage> {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error('User not authenticated');
@@ -159,14 +170,13 @@ export const visionBoardService = {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      // Convert to blob for upload
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-      console.log('blob', blob);
+      // Convert base64 to Uint8Array for upload
+      const uint8Array = base64ToUint8Array(base64);
+
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('vision-board-images')
-        .upload(filePath, blob, {
+        .upload(filePath, uint8Array, {
           contentType: `image/${fileExt}`,
           upsert: false
         });

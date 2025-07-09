@@ -21,7 +21,6 @@ export default function VisionBoardScreen() {
     try {
       setLoading(true);
       const images = await visionBoardService.getUserVisionBoardImagesWithUrls();
-      console.log('images signed', images);
       setImages(images);
     } catch (error) {
       console.error('Error loading images:', error);
