@@ -1,5 +1,4 @@
 import { DailyGoals, HomeCardsContainer, HorizontalCalendar } from '@/components';
-import { QuoteCard } from '@/components/Cards';
 import GradientBackground from '@/components/Layout/GradientBackground';
 import { StyleSheet, View } from 'react-native';
 
@@ -15,9 +14,9 @@ export default function HomeScreen() {
         
         <HomeCardsContainer />
         
-        <View style={styles.quoteContainer}>
+        {/* <View style={styles.quoteContainer}>
           <QuoteCard transparent={true} quote="Forget perfection. Just aim to be 1% better than yesterday." />
-        </View>
+        </View> */}
         <View style={styles.questionContainer}>
           {/* <QuestionCard question="How are you feeling today?" onValueChange={(value) => {console.log('value changed', value)}} />  */}
         </View>

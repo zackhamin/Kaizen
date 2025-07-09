@@ -3,12 +3,13 @@ import { useGratitudeEntries } from '@/hooks/useGratitude';
 import { useTodayTasks } from '@/hooks/useTasks';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { HomeCard } from './HomeCard';
 
 export const HomeCardsContainer: React.FC = () => {
   const { data: gratitudeEntries = [], isLoading: gratitudeLoading } = useGratitudeEntries();
   const { data: tasks = [], isLoading: tasksLoading } = useTodayTasks();
+  const [selectedTab, setSelectedTab] = React.useState<'daily' | 'challenges' | 'support'>('daily');
   
   const gratitudeCount = gratitudeEntries.length;
   const tasksCount = tasks.length;
@@ -38,6 +39,10 @@ export const HomeCardsContainer: React.FC = () => {
     router.push('/communities');
   };
 
+  const handleVisionBoardPress = () => {
+    router.push('/vision-board');
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -49,45 +54,99 @@ export const HomeCardsContainer: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      
-      <View style={styles.grid}>
-        <View style={styles.row}>
-          <HomeCard
-            title="Appreciations"
-            subtitle="Gratitude, Brother."
-            count={gratitudeCount}
-            maxCount={3}
-            onPress={handleGratitudePress}
-            style={styles.card}
-          />
-          <HomeCard
-            title="Daily Targets"
-            subtitle="You can do it."
-            count={completedTasksCount}
-            maxCount={tasksCount || 1}
-            onPress={handleTasksPress}
-            style={styles.card}
-          />
+      {/* Capsule Tab Bar */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ marginBottom: theme.spacing.md }}
+      >
+        <View style={styles.capsuleBar}>
+          <TouchableOpacity
+            style={[styles.capsule, selectedTab === 'daily' && styles.capsuleSelected]}
+            onPress={() => setSelectedTab('daily')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.capsuleText, selectedTab === 'daily' && styles.capsuleTextSelected]}>Daily</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.capsule, selectedTab === 'challenges' && styles.capsuleSelected]}
+            onPress={() => setSelectedTab('challenges')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.capsuleText, selectedTab === 'challenges' && styles.capsuleTextSelected]}>Challenges</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.capsule, selectedTab === 'support' && styles.capsuleSelected]}
+            onPress={() => setSelectedTab('support')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.capsuleText, selectedTab === 'support' && styles.capsuleTextSelected]}>Support</Text>
+          </TouchableOpacity>
         </View>
-        
-        <View style={styles.row}>
-          <HomeCard
-            title="Brotherhood"
-            subtitle="Anonymous group chat"
-            onPress={handleGroupChatPress}
+      </ScrollView>
 
-            style={styles.card}
-          />
+      {/* Only render grid for 'Daily' for now */}
+      {selectedTab === 'daily' && (
+        <View style={styles.grid}>
+          <View style={styles.row}>
+            <HomeCard
+              title="Appreciations"
+              subtitle="Gratitude, Brother."
+              count={gratitudeCount}
+              maxCount={3}
+              onPress={handleGratitudePress}
+              style={styles.card}
+            />
+            <HomeCard
+              title="Daily Targets"
+              subtitle="You can do it."
+              count={completedTasksCount}
+              maxCount={tasksCount || 1}
+              onPress={handleTasksPress}
+              style={styles.card}
+            />
+          </View>
+          <View style={styles.row}>
+            <HomeCard
+              title="Vision Board"
+              subtitle="This Is Why."
+              onPress={handleVisionBoardPress}
+              style={styles.card}
+            />
 
-          <HomeCard
-            title="Coming soon"
-            subtitle=""
-            onPress={handleMoodPress}
-            style={styles.card}
-            disabled={true}
-          />
+          </View>
         </View>
-      </View>
+      )}
+      {selectedTab === 'challenges' && (
+        <View style={styles.grid}>
+          <View style={styles.row}>
+
+            <HomeCard
+              title="Coming soon"
+              subtitle=""
+              onPress={handleMoodPress}
+              style={styles.card}
+              disabled={true}
+            />
+          </View>
+          <View style={styles.row}>
+            <HomeCard
+              title="Brotherhood"
+              subtitle="Anonymous group chat"
+              onPress={handleGroupChatPress}
+              style={styles.card}
+            />
+            <HomeCard
+              title="Coming soon"
+              subtitle=""
+              onPress={handleMoodPress}
+              style={styles.card}
+              disabled={true}
+            />
+          </View>
+        </View>
+      )}
+      {/* You can add a grid for 'challenges' here in the future */}
     </View>
   );
 };
@@ -125,6 +184,35 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     fontSize: 16,
     color: colors.glass.text.secondary,
+  },
+  capsuleBar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+  },
+  capsule: {
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginRight: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  capsuleSelected: {
+    backgroundColor: colors.accent.copper,
+    borderColor: colors.accent.copper,
+  },
+  capsuleText: {
+    color: colors.glass.text.primary,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  capsuleTextSelected: {
+    color: colors.accent.white,
   },
 });  
 
