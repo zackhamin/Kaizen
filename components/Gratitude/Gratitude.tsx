@@ -1,7 +1,6 @@
 import { colors } from '@/constants/theme';
 import { useCreateGratitudeEntry, useDeleteGratitudeEntry, useGratitudeEntries } from '@/hooks/useGratitude';
 import { GratitudeEntry } from '@/services/gratitude.service.modern';
-import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,7 +23,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import GradientBackground from '../Layout/GradientBackground';
+import { StackScreen } from '../Layout/StackScreen';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -93,7 +92,6 @@ const Gratitude: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
   const [showWarriorAnimation, setShowWarriorAnimation] = useState(false);
   const [hasShownAnimation, setHasShownAnimation] = useState(false);
-  const router = useRouter();
 
   // Use React Query hooks instead of legacy hook
   const { data: gratitudeEntries = [], isLoading: loading, refetch: refreshGratitudeEntries } = useGratitudeEntries();
@@ -206,31 +204,23 @@ const Gratitude: React.FC = () => {
 
   if (loading) {
     return (
-      <GradientBackground showHeader={false}>
+      <StackScreen title="Loading...">
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.glass.text.primary} />
           <Text style={styles.loadingText}>Loading your entries...</Text>
         </View>
-      </GradientBackground>
+      </StackScreen>
     );
   }
 
   return (
-    <GradientBackground showHeader={false}>
+    <StackScreen title="Daily Gratitude">
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
-        </View>
+
         
         <View style={styles.content}>
           <View style={styles.headerSection}>
@@ -316,7 +306,7 @@ const Gratitude: React.FC = () => {
           <WarriorCompletion onAnimationComplete={handleAnimationComplete} />
         )}
       </KeyboardAvoidingView>
-    </GradientBackground>
+    </StackScreen>
   );
 };
 
@@ -385,24 +375,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.glass.text.primary,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
-  backButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: colors.glass.buttonDefault,
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colors.glass.text.primary,
   },
   content: {
@@ -483,7 +455,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   addButton: {
-    backgroundColor: colors.glass.buttonDefault,
+    backgroundColor: colors.button.copper,
     paddingVertical: 16,
     borderRadius: 12,
     justifyContent: 'center',
@@ -593,19 +565,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
   },
   emptyStateTitle: {
     fontSize: 24,
     fontWeight: '600',
     color: colors.glass.text.primary,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   emptyStateText: {
     fontSize: 16,
     color: colors.glass.text.secondary,
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 24,
   },
 });

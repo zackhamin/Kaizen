@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/Layout/GradientBackground';
+import { StackScreen } from '@/components/Layout/StackScreen';
 import { colors, theme } from '@/constants/theme';
 import { useCommunities, useCommunityThreads, useCreateThread } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
@@ -58,9 +58,9 @@ export default function CommunityDetailScreen() {
 
   const getCommunityStyle = (communityName: string) => {
     switch (communityName?.toLowerCase()) {
-      case 'mental support':
+      case 'mental-support':
         return { bg: 'rgba(139, 69, 19, 0.15)', emoji: '🧠' };
-      case 'side hustles':
+      case 'relationships':
         return { bg: 'rgba(34, 197, 94, 0.15)', emoji: '💼' };
       case 'group chat':
         return { bg: 'rgba(59, 130, 246, 0.15)', emoji: '💬' };
@@ -150,40 +150,18 @@ export default function CommunityDetailScreen() {
 
   if (isLoading) {
     return (
-      <GradientBackground showHeader={false}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Loading...</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        
+      <StackScreen title="Loading...">
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.glass.text.primary} />
           <Text style={styles.loadingText}>Loading community...</Text>
         </View>
-      </GradientBackground>
+      </StackScreen>
     );
   }
 
   if (!community) {
     return (
-      <GradientBackground showHeader={false}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Community Not Found</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        
+      <StackScreen title="Community Not Found">
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Community not found</Text>
           <TouchableOpacity 
@@ -193,66 +171,43 @@ export default function CommunityDetailScreen() {
             <Text style={styles.createFirstButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
-      </GradientBackground>
+      </StackScreen>
     );
   }
 
   if (error) {
     return (
-      <GradientBackground showHeader={false}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{community.name}</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        
+      <StackScreen title={community.name}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Failed to load threads</Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </GradientBackground>
+      </StackScreen>
     );
   }
 
   const communityStyle = getCommunityStyle(community.name);
 
   return (
-    <GradientBackground showHeader={false}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <View style={[styles.headerIcon, { backgroundColor: communityStyle.bg }]}>
-            <Text style={styles.headerEmoji}>{communityStyle.emoji}</Text>
-          </View>
-          <Text style={styles.headerTitle}>{community.name}</Text>
-        </View>
+    <StackScreen
+      title={community.name}
+      rightActions={
         <TouchableOpacity 
           onPress={handleCreateThread}
           style={styles.createButton}
         >
           <Ionicons name="add" size={24} color={colors.glass.text.primary} />
         </TouchableOpacity>
-      </View>
-
+      }
+    >
       <View style={styles.content}>
         <View style={styles.descriptionContainer}>
           <Text style={styles.communityDescription}>
             {community.description}
           </Text>
         </View>
-
         <FlatList
           data={threads}
           renderItem={renderThreadCard}
@@ -264,46 +219,12 @@ export default function CommunityDetailScreen() {
           ListEmptyComponent={renderEmptyState}
         />
       </View>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleCreateThread}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={24} color="#fff" />
-      </TouchableOpacity>
-    </GradientBackground>
+    </StackScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: 60,
-    paddingBottom: theme.spacing.md,
-  },
-  backButton: {
-    padding: theme.spacing.sm,
-    marginLeft: -theme.spacing.sm,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 40, // Compensate for create button
-  },
-  headerIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.borderRadius.medium,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.sm,
-  },
+
   headerEmoji: {
     fontSize: 16,
   },

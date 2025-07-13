@@ -17,6 +17,10 @@ export const colors = {
     light: '#48BB78', // Lighter green
     dark: '#1A202C', // Very dark green-grey
   },
+
+  button: {
+     copper: '#C05621',
+  },
   
   // Accent colors
   accent: {

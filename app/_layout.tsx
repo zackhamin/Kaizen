@@ -32,6 +32,10 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="gratitude" options={{ headerShown: false }} />
             <Stack.Screen name="vision-board" options={{ headerShown: false }} />
+            <Stack.Screen name="create-thread" options={{ headerShown: false }} />
+            <Stack.Screen name="community/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="communities" options={{ headerShown: false }} />
+            <Stack.Screen name="thread/[id]" options={{ headerShown: false }} />
           </Stack>
         </GestureHandlerRootView>
       </AuthProvider>

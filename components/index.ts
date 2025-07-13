@@ -6,6 +6,5 @@ export * from './HomeCards';
 export * from './HorizontalCalendar';
 export * from './Layout/Header';
 export * from './Modals';
-export * from './PainScales';
+export * from './Scales';
 export * from './Todos';
-
