@@ -1,0 +1,25 @@
+name: Afternoon Notification
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+jobs:
+  afternoon-notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Afternoon Check-in
+        run: |
+          response=$(curl -s -w "%{http_code}" -o response.txt \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            https://xhmzmzynshesqpxienfb.supabase.co/functions/v1/Afternoon-Checkin)
+          echo "HTTP Status: $response"
+          echo "Response:"
+          cat response.txt
+          if [ $response -ne 200 ]; then
+            echo "Afternoon notification failed with status $response"
+            exit 1
+          fi 
