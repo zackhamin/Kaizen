@@ -1,13 +1,6 @@
-name: Daily Notification Triggers
+name: Manual Notification
 
 on:
-  schedule:
-    # Morning motivation at 8:00 AM UTC (adjust timezone as needed)
-    - cron: '0 8 * * *'
-    # Afternoon check-in at 2:00 PM UTC (adjust timezone as needed)  
-    - cron: '0 14 * * *'
-  
-  # Allow manual triggering for testing
   workflow_dispatch:
     inputs:
       notification_type:
@@ -21,46 +14,37 @@ on:
         - both
 
 jobs:
-  morning-notification:
+  manual-notification:
     runs-on: ubuntu-latest
-    if: github.event.schedule == '0 8 * * *' || github.event.inputs.notification_type == 'morning' || github.event.inputs.notification_type == 'both'
-    
     steps:
       - name: Trigger Morning Motivation
+        if: ${{ github.event.inputs.notification_type == 'morning' || github.event.inputs.notification_type == 'both' }}
         run: |
           response=$(curl -s -w "%{http_code}" -o response.txt \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
             https://xhmzmzynshesqpxienfb.supabase.co/functions/v1/Morning-motiviation)
-          
           echo "HTTP Status: $response"
           echo "Response:"
           cat response.txt
-          
           if [ $response -ne 200 ]; then
             echo "Morning notification failed with status $response"
             exit 1
           fi
 
-  afternoon-notification:
-    runs-on: ubuntu-latest
-    if: github.event.schedule == '0 14 * * *' || github.event.inputs.notification_type == 'afternoon' || github.event.inputs.notification_type == 'both'
-    
-    steps:
       - name: Trigger Afternoon Check-in
+        if: ${{ github.event.inputs.notification_type == 'afternoon' || github.event.inputs.notification_type == 'both' }}
         run: |
           response=$(curl -s -w "%{http_code}" -o response.txt \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
             https://xhmzmzynshesqpxienfb.supabase.co/functions/v1/Afternoon-Checkin)
-          
           echo "HTTP Status: $response"
           echo "Response:"
           cat response.txt
-          
           if [ $response -ne 200 ]; then
             echo "Afternoon notification failed with status $response"
             exit 1
-          fi
+          fi 

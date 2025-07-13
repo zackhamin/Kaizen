@@ -1,0 +1,25 @@
+name: Morning Notification
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  morning-notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Morning Motivation
+        run: |
+          response=$(curl -s -w "%{http_code}" -o response.txt \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            https://xhmzmzynshesqpxienfb.supabase.co/functions/v1/Morning-motiviation)
+          echo "HTTP Status: $response"
+          echo "Response:"
+          cat response.txt
+          if [ $response -ne 200 ]; then
+            echo "Morning notification failed with status $response"
+            exit 1
+          fi 
