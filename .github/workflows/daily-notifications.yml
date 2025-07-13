@@ -23,7 +23,7 @@ on:
 jobs:
   morning-notification:
     runs-on: ubuntu-latest
-    if: github.event.schedule == '0 8 * * *' || github.event.inputs.notification_type == 'morning' || github.event.inputs.notification_type == 'both'
+    if: github.event_name == 'schedule' || github.event.inputs.notification_type == 'morning' || github.event.inputs.notification_type == 'both'
     
     steps:
       - name: Trigger Morning Motivation
@@ -45,7 +45,7 @@ jobs:
 
   afternoon-notification:
     runs-on: ubuntu-latest
-    if: github.event.schedule == '0 14 * * *' || github.event.inputs.notification_type == 'afternoon' || github.event.inputs.notification_type == 'both'
+    if: github.event_name == 'schedule' || github.event.inputs.notification_type == 'afternoon' || github.event.inputs.notification_type == 'both'
     
     steps:
       - name: Trigger Afternoon Check-in
