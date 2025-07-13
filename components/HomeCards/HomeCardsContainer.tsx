@@ -1,3 +1,4 @@
+import { DailyCheckinContainer } from '@/components/DailyCheckins/DailyCheckins';
 import { colors, theme } from '@/constants/theme';
 import { useGratitudeEntries } from '@/hooks/useGratitude';
 import { useTodayTasks } from '@/hooks/useTasks';
@@ -24,10 +25,6 @@ export const HomeCardsContainer: React.FC = () => {
 
   const handleTasksPress = () => {
     router.push('/(tabs)/targets');
-  };
-
-  const handleCBTPress = () => {
-    router.push('/(tabs)/cbt');
   };
 
   const handleMoodPress = () => {
@@ -106,14 +103,8 @@ export const HomeCardsContainer: React.FC = () => {
               style={styles.card}
             />
           </View>
-          <View style={styles.row}>
-            <HomeCard
-              title="Vision Board"
-              subtitle="This Is Why."
-              onPress={handleVisionBoardPress}
-              style={styles.card}
-            />
-
+          <View style={{ marginTop: theme.spacing.md }}>
+            <DailyCheckinContainer />
           </View>
         </View>
       )}
@@ -142,6 +133,18 @@ export const HomeCardsContainer: React.FC = () => {
               onPress={handleMoodPress}
               style={styles.card}
               disabled={true}
+            />
+          </View>
+        </View>
+      )}
+      {selectedTab === 'support' && (
+        <View style={styles.grid}>
+          <View style={styles.row}>
+            <HomeCard
+              title="Vision Board"
+              subtitle="This Is Why."
+              onPress={handleVisionBoardPress}
+              style={styles.card}
             />
           </View>
         </View>

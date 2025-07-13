@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { QuestionCard } from '../Cards/QuestionCard';
 import GradientBackground from '../Layout/GradientBackground';
 import { CBTChat } from './CBTChat';
 
@@ -176,13 +175,6 @@ export function CBTScreen() {
             </View>
 
             <View style={styles.modalContent}>
-              <QuestionCard
-                question="How are you feeling right now?"
-                initialValue={moodBefore}
-                onValueChange={setMoodBefore}
-                showLabels={true}
-                transparent={true}
-              />
 
               <TouchableOpacity
                 style={[

@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/Layout/GradientBackground';
+import { StackScreen } from '@/components/Layout/StackScreen';
 import { colors, theme } from '@/constants/theme';
 import { useCommunities } from '@/hooks/useCommunities';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,9 +30,9 @@ export default function CommunitiesScreen() {
 
   const getCommunityStyle = (communityName: string) => {
     switch (communityName.toLowerCase()) {
-      case 'mental support':
+      case 'mental-support':
         return { bg: 'rgba(139, 69, 19, 0.15)', emoji: '🧠' };
-      case 'side hustles':
+      case 'relationships':
         return { bg: 'rgba(34, 197, 94, 0.15)', emoji: '💼' };
       case 'group chat':
         return { bg: 'rgba(59, 130, 246, 0.15)', emoji: '💬' };
@@ -92,39 +92,19 @@ export default function CommunitiesScreen() {
 
   if (isLoading) {
     return (
-      <GradientBackground showHeader={false}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Communities</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        
+       <StackScreen title="Communities"> 
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.glass.text.primary} />
           <Text style={styles.loadingText}>Loading communities...</Text>
         </View>
-      </GradientBackground>
+      </StackScreen>
     );
   }
 
   if (error) {
     return (
-      <GradientBackground showHeader={false}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Communities</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+      <StackScreen title="Communities">
+
         
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Failed to load communities</Text>
@@ -132,22 +112,13 @@ export default function CommunitiesScreen() {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </GradientBackground>
+      </StackScreen>
     );
   }
 
   return (
-    <GradientBackground showHeader={false}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Communities</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <StackScreen title="Communities">
+
 
       <View style={styles.content}>
         <Text style={styles.subtitle}>
@@ -164,33 +135,11 @@ export default function CommunitiesScreen() {
           contentContainerStyle={styles.listContainer}
         />
       </View>
-    </GradientBackground>
+    </StackScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: 60,
-    paddingBottom: theme.spacing.md,
-  },
-  backButton: {
-    padding: theme.spacing.sm,
-    marginLeft: -theme.spacing.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.glass.text.primary,
-    textAlign: 'center',
-    marginRight: 40, // Compensate for back button
-  },
-  headerSpacer: {
-    width: 40,
-  },
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,

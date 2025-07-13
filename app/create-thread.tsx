@@ -95,9 +95,9 @@ export default function CreateThreadModal() {
 
   const getCommunityStyle = (communityName: string) => {
     switch (communityName?.toLowerCase()) {
-      case 'mental support':
+      case 'mental-support':
         return { bg: 'rgba(139, 69, 19, 0.15)', emoji: '🧠' };
-      case 'side hustles':
+      case 'relationships':
         return { bg: 'rgba(34, 197, 94, 0.15)', emoji: '💼' };
       case 'group chat':
         return { bg: 'rgba(59, 130, 246, 0.15)', emoji: '💬' };

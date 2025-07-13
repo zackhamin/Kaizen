@@ -1,11 +1,12 @@
 import { DailyGoals, HomeCardsContainer, HorizontalCalendar } from '@/components';
 import GradientBackground from '@/components/Layout/GradientBackground';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
+
   return (
     <GradientBackground showHeader={false}>
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         <View style={styles.scaleContainer}> 
           <HorizontalCalendar onDateChange={(date) => {console.log('date changed', date)}} />
         </View>
@@ -20,7 +21,7 @@ export default function HomeScreen() {
         <View style={styles.questionContainer}>
           {/* <QuestionCard question="How are you feeling today?" onValueChange={(value) => {console.log('value changed', value)}} />  */}
         </View>
-      </View>
+      </ScrollView>
     </GradientBackground>
   );
 }
