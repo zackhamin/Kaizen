@@ -1,8 +1,9 @@
+import CollapsibleCard from '@/components/Cards/CollapsibleCard';
 import { NumberScale } from '@/components/Scales/NumberScale';
 import { colors, theme } from '@/constants/theme';
 import { useTodayCheckin, useUpsertDailyCheckin } from '@/hooks/useDailyCheckins';
 import { DailyCheckin } from '@/services/dailycheckin.service';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 const questions = [
@@ -15,17 +16,6 @@ const DailyCheckinContainer: React.FC = () => {
   const { data: checkin, isLoading, error, isError } = useTodayCheckin();
   const upsertMutation = useUpsertDailyCheckin();
 
-  // Debug logs
-  useEffect(() => {
-    console.log('DailyCheckinContainer: render state:', {
-      isLoading,
-      isError,
-      error,
-      checkin,
-      hasCheckin: !!checkin
-    });
-  }, [isLoading, isError, error, checkin]);
-
   const handleChange = (key: string, value: number) => {
     console.log('DailyCheckinContainer: handleChange:', { key, value });
     console.log('DailyCheckinContainer: current checkin:', checkin);
@@ -34,6 +24,7 @@ const DailyCheckinContainer: React.FC = () => {
       ...(checkin || {}),
       [key]: value,
       checkin_date: new Date().toISOString().slice(0, 10),
+      notes: checkin?.notes || null,
     } as Omit<DailyCheckin, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
     
     console.log('DailyCheckinContainer: mutation payload:', payload);
@@ -60,11 +51,8 @@ const DailyCheckinContainer: React.FC = () => {
     );
   }
 
-  console.log('DailyCheckinContainer: rendering questions, checkin data:', checkin);
-
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Daily Check-in</Text>
+    <CollapsibleCard title="Daily Check-in">
       {checkin ? (
         <Text style={styles.subtitle}>Today's responses loaded</Text>
       ) : (
@@ -92,7 +80,7 @@ const DailyCheckinContainer: React.FC = () => {
           <Text style={styles.errorText}>Update failed: {upsertMutation.error?.message}</Text>
         </View>
       )}
-    </View>
+    </CollapsibleCard>
   );
 };
 

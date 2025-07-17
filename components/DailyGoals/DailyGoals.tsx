@@ -62,7 +62,7 @@ export const DailyGoals: React.FC = () => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Daily Training</Text>
+        <Text style={styles.title}>Goals</Text>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={colors.glass.text.secondary} />
           <Text style={styles.loadingText}>Loading...</Text>
@@ -73,7 +73,7 @@ export const DailyGoals: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Daily Training</Text>
+      <Text style={styles.title}>Goals</Text>
       <View style={styles.goalsList}>
         {goals.map(renderGoal)}
       </View>

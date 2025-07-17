@@ -7,6 +7,7 @@ export interface DailyCheckin {
   energy_level: number;
   challenge_handling: number;
   focus_level: number;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -51,7 +52,8 @@ export const dailyCheckinService = {
         p_checkin_date: values.checkin_date,
         p_energy_level: values.energy_level,
         p_challenge_handling: values.challenge_handling,
-        p_focus_level: values.focus_level
+        p_focus_level: values.focus_level,
+        p_notes: values.notes
       });
 
       if (error) throw error;
