@@ -90,6 +90,33 @@ export const dailyCheckinService = {
       console.error('dailyCheckinService: Error fetching checkin for date:', error);
       throw error;
     }
+  },
+
+  // Create a new daily note entry
+  async createDailyNote(notes: string): Promise<DailyCheckin> {
+    try {
+      console.log('dailyCheckinService: Creating daily note:', notes);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const today = new Date().toISOString().slice(0, 10);
+      
+      const { data, error } = await supabase.rpc('create_user_daily_note', {
+        p_user_id: user.id,
+        p_checkin_date: today,
+        p_notes: notes.trim()
+      });
+
+      if (error) throw error;
+      console.log('dailyCheckinService: Created daily note:', data);
+      
+      // Handle case where RPC returns an array instead of single object
+      const note = Array.isArray(data) ? data[0] : data;
+      return note;
+    } catch (error) {
+      console.error('dailyCheckinService: Error creating daily note:', error);
+      throw error;
+    }
   }
 };
 

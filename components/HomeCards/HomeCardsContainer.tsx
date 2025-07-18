@@ -1,8 +1,8 @@
 import { DailyCheckinContainer, DailyNotes } from '@/components/DailyCheckins';
 import { colors, theme } from '@/constants/theme';
-import { useTodayCheckin, useUpsertDailyCheckin } from '@/hooks/useDailyCheckins';
+import { useCreateDailyNote, useTodayCheckin, useUpsertDailyCheckin } from '@/hooks/useDailyCheckins';
 import { useGratitudeEntries } from '@/hooks/useGratitude';
-import { useTodayTasks } from '@/hooks/useTasks';
+import { useEverydayTasks } from '@/hooks/useTasks';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -10,9 +10,10 @@ import { HomeCard } from './HomeCard';
 
 export const HomeCardsContainer: React.FC = () => {
   const { data: gratitudeEntries = [], isLoading: gratitudeLoading } = useGratitudeEntries();
-  const { data: tasks = [], isLoading: tasksLoading } = useTodayTasks();
+  const { data: tasks = [], isLoading: tasksLoading } = useEverydayTasks();
   const { data: checkin } = useTodayCheckin();
   const upsertMutation = useUpsertDailyCheckin();
+  const createNoteMutation = useCreateDailyNote();
   const [selectedTab, setSelectedTab] = React.useState<'daily' | 'challenges' | 'support'>('daily');
   
   const gratitudeCount = gratitudeEntries.length;
@@ -111,17 +112,9 @@ export const HomeCardsContainer: React.FC = () => {
           </View>
           <View>
             <DailyNotes
-              checkin={checkin ?? null}
-              isSaving={upsertMutation.isPending}
+              isSaving={createNoteMutation.isPending}
               onSave={notes => {
-                if (!checkin) return;
-                upsertMutation.mutate({
-                  checkin_date: checkin.checkin_date,
-                  energy_level: checkin.energy_level,
-                  challenge_handling: checkin.challenge_handling,
-                  focus_level: checkin.focus_level,
-                  notes,
-                });
+                createNoteMutation.mutate(notes);
               }}
             />
           </View>

@@ -1,27 +1,22 @@
 import CollapsibleCard from '@/components/Cards/CollapsibleCard';
 import { colors, theme } from '@/constants/theme';
-import { DailyCheckin } from '@/services/dailycheckin.service';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
 
 interface DailyNotesProps {
-  checkin: DailyCheckin | null;
   isSaving: boolean;
   onSave: (notes: string) => void;
 }
 
-export const DailyNotes: React.FC<DailyNotesProps> = ({ checkin, isSaving, onSave }) => {
-  const [notes, setNotes] = useState(checkin?.notes || '');
+export const DailyNotes: React.FC<DailyNotesProps> = ({ isSaving, onSave }) => {
+  const [notes, setNotes] = useState('');
   const [dirty, setDirty] = useState(false);
 
-  useEffect(() => {
-    setNotes(checkin?.notes || '');
-    setDirty(false);
-  }, [checkin?.notes]);
-
   const handleSave = () => {
-    onSave(notes);
+    if (!notes.trim()) return; // Don't save empty notes
+    onSave(notes.trim());
     setDirty(false);
+    setNotes(''); // Clear the text input after save
   };
 
   return (
@@ -38,9 +33,9 @@ export const DailyNotes: React.FC<DailyNotesProps> = ({ checkin, isSaving, onSav
         editable={!isSaving}
       />
       <TouchableOpacity
-        style={[styles.saveButton, (!dirty || isSaving) && styles.saveButtonDisabled]}
+        style={[styles.saveButton, (!dirty || isSaving || !notes.trim()) && styles.saveButtonDisabled]}
         onPress={handleSave}
-        disabled={!dirty || isSaving}
+        disabled={!dirty || isSaving || !notes.trim()}
         activeOpacity={0.8}
       >
         {isSaving ? (

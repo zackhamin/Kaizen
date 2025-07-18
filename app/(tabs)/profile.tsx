@@ -12,7 +12,7 @@ const NAV_OPTIONS = [
   {
     label: 'Account Details',
     icon: 'person-outline',
-    onPress: () => {/* TODO: Navigate to Account Details */},
+    onPress: () => router.push('/account-details'),
   },
   {
     label: 'Achievements',
