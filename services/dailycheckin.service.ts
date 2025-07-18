@@ -7,6 +7,7 @@ export interface DailyCheckin {
   energy_level: number;
   challenge_handling: number;
   focus_level: number;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -51,7 +52,8 @@ export const dailyCheckinService = {
         p_checkin_date: values.checkin_date,
         p_energy_level: values.energy_level,
         p_challenge_handling: values.challenge_handling,
-        p_focus_level: values.focus_level
+        p_focus_level: values.focus_level,
+        p_notes: values.notes
       });
 
       if (error) throw error;
@@ -86,6 +88,33 @@ export const dailyCheckinService = {
       return checkin || null;
     } catch (error) {
       console.error('dailyCheckinService: Error fetching checkin for date:', error);
+      throw error;
+    }
+  },
+
+  // Create a new daily note entry
+  async createDailyNote(notes: string): Promise<DailyCheckin> {
+    try {
+      console.log('dailyCheckinService: Creating daily note:', notes);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const today = new Date().toISOString().slice(0, 10);
+      
+      const { data, error } = await supabase.rpc('create_user_daily_note', {
+        p_user_id: user.id,
+        p_checkin_date: today,
+        p_notes: notes.trim()
+      });
+
+      if (error) throw error;
+      console.log('dailyCheckinService: Created daily note:', data);
+      
+      // Handle case where RPC returns an array instead of single object
+      const note = Array.isArray(data) ? data[0] : data;
+      return note;
+    } catch (error) {
+      console.error('dailyCheckinService: Error creating daily note:', error);
       throw error;
     }
   }

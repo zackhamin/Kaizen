@@ -1,7 +1,8 @@
-import { DailyCheckinContainer } from '@/components/DailyCheckins/DailyCheckins';
+import { DailyCheckinContainer, DailyNotes } from '@/components/DailyCheckins';
 import { colors, theme } from '@/constants/theme';
+import { useCreateDailyNote, useTodayCheckin, useUpsertDailyCheckin } from '@/hooks/useDailyCheckins';
 import { useGratitudeEntries } from '@/hooks/useGratitude';
-import { useTodayTasks } from '@/hooks/useTasks';
+import { useEverydayTasks } from '@/hooks/useTasks';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,7 +10,10 @@ import { HomeCard } from './HomeCard';
 
 export const HomeCardsContainer: React.FC = () => {
   const { data: gratitudeEntries = [], isLoading: gratitudeLoading } = useGratitudeEntries();
-  const { data: tasks = [], isLoading: tasksLoading } = useTodayTasks();
+  const { data: tasks = [], isLoading: tasksLoading } = useEverydayTasks();
+  const { data: checkin } = useTodayCheckin();
+  const upsertMutation = useUpsertDailyCheckin();
+  const createNoteMutation = useCreateDailyNote();
   const [selectedTab, setSelectedTab] = React.useState<'daily' | 'challenges' | 'support'>('daily');
   
   const gratitudeCount = gratitudeEntries.length;
@@ -103,8 +107,16 @@ export const HomeCardsContainer: React.FC = () => {
               style={styles.card}
             />
           </View>
-          <View style={{ marginTop: theme.spacing.md }}>
+          <View>
             <DailyCheckinContainer />
+          </View>
+          <View>
+            <DailyNotes
+              isSaving={createNoteMutation.isPending}
+              onSave={notes => {
+                createNoteMutation.mutate(notes);
+              }}
+            />
           </View>
         </View>
       )}

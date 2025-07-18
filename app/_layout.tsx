@@ -36,6 +36,7 @@ export default function RootLayout() {
             <Stack.Screen name="community/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="communities" options={{ headerShown: false }} />
             <Stack.Screen name="thread/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="account-details" options={{ headerShown: false }} />
           </Stack>
         </GestureHandlerRootView>
       </AuthProvider>

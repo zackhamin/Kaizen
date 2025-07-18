@@ -26,6 +26,18 @@ export function useUpsertDailyCheckin() {
   });
 }
 
+// Hook for creating a daily note
+export function useCreateDailyNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (notes: string) => dailyCheckinService.createDailyNote(notes),
+    onSuccess: (newNote) => {
+      // Invalidate the today checkin query to refetch with new data
+      queryClient.invalidateQueries({ queryKey: queryKeys.todayCheckin });
+    },
+  });
+}
+
 // export function useDailyCheckinsForDate(date: string) {
 //   return useQuery({
 //     queryKey: queryKeys.checkinsForDate(date),
