@@ -24,7 +24,6 @@ const DailyCheckinContainer: React.FC = () => {
       ...(checkin || {}),
       [key]: value,
       checkin_date: new Date().toISOString().slice(0, 10),
-      notes: checkin?.notes || null,
     } as Omit<DailyCheckin, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
     
     console.log('DailyCheckinContainer: mutation payload:', payload);

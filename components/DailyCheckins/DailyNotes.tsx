@@ -1,27 +1,36 @@
 import CollapsibleCard from '@/components/Cards/CollapsibleCard';
 import { colors, theme } from '@/constants/theme';
+import { useCreateDailyNote, useDeleteDailyNote, useTodayNotes } from '@/hooks/useDailyCheckins';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
 
-interface DailyNotesProps {
-  isSaving: boolean;
-  onSave: (notes: string) => void;
-}
-
-export const DailyNotes: React.FC<DailyNotesProps> = ({ isSaving, onSave }) => {
+export const DailyNotes: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [dirty, setDirty] = useState(false);
+  
+  const { data: todayNotes = [], isLoading: isLoadingNotes } = useTodayNotes();
+  const createNoteMutation = useCreateDailyNote();
+  const deleteNoteMutation = useDeleteDailyNote();
+
+  const isSaving = createNoteMutation.isPending;
+  const isDeleting = deleteNoteMutation.isPending;
 
   const handleSave = () => {
     if (!notes.trim()) return; // Don't save empty notes
-    onSave(notes.trim());
+    createNoteMutation.mutate(notes.trim());
     setDirty(false);
     setNotes(''); // Clear the text input after save
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    deleteNoteMutation.mutate(noteId);
   };
 
   return (
     <CollapsibleCard title="Notes for Today">
       <Text style={styles.label}>Write your thoughts, reminders, or anything else for today.</Text>
+      
+      {/* Input section */}
       <TextInput
         style={styles.input}
         value={notes}
@@ -70,6 +79,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.medium,
     paddingVertical: theme.spacing.sm,
     alignItems: 'center',
+    marginBottom: theme.spacing.lg,
   },
   saveButtonDisabled: {
     backgroundColor: colors.glass.buttonDisabled,
@@ -78,6 +88,51 @@ const styles = StyleSheet.create({
     color: colors.accent.white,
     fontWeight: '600',
     fontSize: 16,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.md,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.glass.text.secondary,
+    marginLeft: theme.spacing.sm,
+  },
+  notesSection: {
+    borderTopWidth: 1,
+    borderTopColor: colors.glass.conversationBorder,
+    paddingTop: theme.spacing.md,
+  },
+  notesSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.glass.text.primary,
+    marginBottom: theme.spacing.md,
+  },
+  notesList: {
+    gap: theme.spacing.sm,
+  },
+  noteItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    backgroundColor: colors.glass.overlay,
+    borderRadius: theme.borderRadius.medium,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: colors.glass.conversationBorder,
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.glass.text.primary,
+    lineHeight: 20,
+  },
+  deleteButton: {
+    padding: theme.spacing.xs,
+    marginLeft: theme.spacing.sm,
   },
 });
 

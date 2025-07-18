@@ -7,7 +7,15 @@ export interface DailyCheckin {
   energy_level: number;
   challenge_handling: number;
   focus_level: number;
-  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyNote {
+  id: string;
+  user_id: string;
+  note_text: string;
+  note_date: string;
   created_at: string;
   updated_at: string;
 }
@@ -52,8 +60,7 @@ export const dailyCheckinService = {
         p_checkin_date: values.checkin_date,
         p_energy_level: values.energy_level,
         p_challenge_handling: values.challenge_handling,
-        p_focus_level: values.focus_level,
-        p_notes: values.notes
+        p_focus_level: values.focus_level
       });
 
       if (error) throw error;
@@ -90,31 +97,104 @@ export const dailyCheckinService = {
       console.error('dailyCheckinService: Error fetching checkin for date:', error);
       throw error;
     }
-  },
+  }
+};
 
-  // Create a new daily note entry
-  async createDailyNote(notes: string): Promise<DailyCheckin> {
+// Daily Notes Service
+export const dailyNotesService = {
+  // Get today's notes for current user
+  async getTodayNotes(): Promise<DailyNote[]> {
     try {
-      console.log('dailyCheckinService: Creating daily note:', notes);
+      console.log('dailyNotesService: Getting today\'s notes');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const today = new Date().toISOString().slice(0, 10);
       
-      const { data, error } = await supabase.rpc('create_user_daily_note', {
-        p_user_id: user.id,
-        p_checkin_date: today,
-        p_notes: notes.trim()
-      });
+      const { data, error } = await supabase
+        .from('daily_notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('note_date', today)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log('dailyCheckinService: Created daily note:', data);
-      
-      // Handle case where RPC returns an array instead of single object
-      const note = Array.isArray(data) ? data[0] : data;
-      return note;
+      console.log('dailyNotesService: Retrieved notes:', data);
+      return data || [];
     } catch (error) {
-      console.error('dailyCheckinService: Error creating daily note:', error);
+      console.error('dailyNotesService: Error fetching today notes:', error);
+      throw error;
+    }
+  },
+
+  // Create a new daily note
+  async createNote(noteText: string): Promise<DailyNote> {
+    try {
+      console.log('dailyNotesService: Creating note:', noteText);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const today = new Date().toISOString().slice(0, 10);
+      
+      const { data, error } = await supabase
+        .from('daily_notes')
+        .insert({
+          user_id: user.id,
+          note_text: noteText.trim(),
+          note_date: today
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log('dailyNotesService: Created note:', data);
+      return data;
+    } catch (error) {
+      console.error('dailyNotesService: Error creating note:', error);
+      throw error;
+    }
+  },
+
+  // Get notes for a specific date
+  async getNotesForDate(date: string): Promise<DailyNote[]> {
+    try {
+      console.log('dailyNotesService: Getting notes for date:', date);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('daily_notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('note_date', date)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      console.log('dailyNotesService: Retrieved notes for date:', data);
+      return data || [];
+    } catch (error) {
+      console.error('dailyNotesService: Error fetching notes for date:', error);
+      throw error;
+    }
+  },
+
+  // Delete a note
+  async deleteNote(noteId: string): Promise<void> {
+    try {
+      console.log('dailyNotesService: Deleting note:', noteId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('daily_notes')
+        .delete()
+        .eq('id', noteId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      console.log('dailyNotesService: Deleted note:', noteId);
+    } catch (error) {
+      console.error('dailyNotesService: Error deleting note:', error);
       throw error;
     }
   }

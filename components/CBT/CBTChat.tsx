@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import GradientBackground from '../Layout/GradientBackground';
+import { StackScreen } from '../Layout/StackScreen';
 
 interface CBTChatProps {
   conversationId: string;
@@ -101,31 +101,22 @@ export function CBTChat({ conversationId, onBack }: CBTChatProps) {
 
   if (isLoadingHistory) {
     return (
-      <GradientBackground showHeader={false}>
+      <StackScreen title="CBT Session" onBack={onBack}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent.white} />
           <Text style={styles.loadingText}>Loading conversation...</Text>
         </View>
-      </GradientBackground>
+        </StackScreen>
     );
   }
 
   return (
-    <GradientBackground showHeader={false}>
+    <StackScreen title="CBT Session" onBack={onBack}>
       <KeyboardAvoidingView 
         style={styles.container} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.accent.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>CBT Session</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
         {/* Messages */}
         <FlatList
           ref={flatListRef}
@@ -193,7 +184,7 @@ export function CBTChat({ conversationId, onBack }: CBTChatProps) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </GradientBackground>
+    </StackScreen>
   );
 }
 
@@ -211,29 +202,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.accent.white,
     fontWeight: theme.typography.weights.medium,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm + 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.glass.overlayBorder,
-    backgroundColor: colors.glass.overlay,
-  },
-  backButton: {
-    padding: theme.spacing.sm,
-    borderRadius: theme.borderRadius.medium,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: theme.typography.weights.semibold,
-    color: colors.accent.white,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 40,
   },
   messagesList: {
     flex: 1,
@@ -349,14 +317,14 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm + 4,
     paddingBottom: 70,
     borderTopWidth: 1,
     borderTopColor: colors.glass.overlayBorder,
     backgroundColor: colors.glass.overlay,
-    minHeight: 60,
+    marginHorizontal: -theme.spacing.lg, // Compensate for StackScreen padding
   },
   textInput: {
     flex: 1,

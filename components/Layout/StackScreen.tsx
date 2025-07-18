@@ -9,10 +9,19 @@ interface StackScreenProps {
   title: string;
   rightActions?: React.ReactNode;
   children: React.ReactNode;
+  onBack?: () => void;
 }
 
-export const StackScreen: React.FC<StackScreenProps> = ({ title, rightActions, children }) => {
+export const StackScreen: React.FC<StackScreenProps> = ({ title, rightActions, children, onBack }) => {
   const router = useRouter();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <GradientBackground showHeader={false}>
@@ -20,7 +29,7 @@ export const StackScreen: React.FC<StackScreenProps> = ({ title, rightActions, c
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={handleBack}
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={24} color={colors.glass.text.primary} />

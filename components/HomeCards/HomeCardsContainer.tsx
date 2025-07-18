@@ -1,6 +1,6 @@
 import { DailyCheckinContainer, DailyNotes } from '@/components/DailyCheckins';
 import { colors, theme } from '@/constants/theme';
-import { useCreateDailyNote, useTodayCheckin, useUpsertDailyCheckin } from '@/hooks/useDailyCheckins';
+import { useTodayCheckin, useUpsertDailyCheckin } from '@/hooks/useDailyCheckins';
 import { useGratitudeEntries } from '@/hooks/useGratitude';
 import { useEverydayTasks } from '@/hooks/useTasks';
 import { useRouter } from 'expo-router';
@@ -13,7 +13,7 @@ export const HomeCardsContainer: React.FC = () => {
   const { data: tasks = [], isLoading: tasksLoading } = useEverydayTasks();
   const { data: checkin } = useTodayCheckin();
   const upsertMutation = useUpsertDailyCheckin();
-  const createNoteMutation = useCreateDailyNote();
+
   const [selectedTab, setSelectedTab] = React.useState<'daily' | 'challenges' | 'support'>('daily');
   
   const gratitudeCount = gratitudeEntries.length;
@@ -111,12 +111,7 @@ export const HomeCardsContainer: React.FC = () => {
             <DailyCheckinContainer />
           </View>
           <View>
-            <DailyNotes
-              isSaving={createNoteMutation.isPending}
-              onSave={notes => {
-                createNoteMutation.mutate(notes);
-              }}
-            />
+            <DailyNotes />
           </View>
         </View>
       )}

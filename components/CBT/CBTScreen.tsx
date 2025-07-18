@@ -111,14 +111,14 @@ export function CBTScreen() {
   return (
     <GradientBackground showHeader={false}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={styles.headerRow}>
         <Text style={styles.headerTitle}>CBT Sessions</Text>
         <TouchableOpacity
-          style={styles.newSessionButton}
+          style={styles.addButtonInline}
           onPress={() => setShowNewSessionModal(true)}
           activeOpacity={0.7}
         >
-          <Ionicons name="add" size={24} color={colors.accent.white} />
+          <Text style={styles.addButtonInlineText}>Add</Text>
         </TouchableOpacity>
       </View>
 
@@ -211,33 +211,38 @@ const styles = StyleSheet.create({
     color: colors.accent.white,
     fontWeight: theme.typography.weights.medium,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg - 4,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.glass.overlayBorder,
-    backgroundColor: colors.glass.overlay,
-  },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: theme.typography.weights.bold,
     color: colors.glass.text.primary,
   },
-  newSessionButton: {
-    backgroundColor: colors.primary.main,
-    borderRadius: theme.borderRadius.large * 2.5,
-    width: 44,
-    height: 44,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+    marginTop: 4,
+    marginHorizontal: 12,
+  },
+  addButtonInline: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 12,
+    width: 56,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary.dark,
+    marginLeft: 12,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.10,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
+  },
+  addButtonInlineText: {
+    color: colors.accent.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   emptyState: {
     flex: 1,
