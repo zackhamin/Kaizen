@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kaizen",
     "slug": "brotherhood",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "Kaizen",
@@ -12,6 +12,10 @@
       "autoIncrement": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "icon": {
+        "light": "./assets/images/icon-light.png",
+        "dark": "./assets/images/icon-dark.png"
       }
     },
     "android": {
