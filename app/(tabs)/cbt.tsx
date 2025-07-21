@@ -3,4 +3,5 @@ import React from 'react';
 
 export default function CBTTab() {
   return <CBTScreen />;
+
 } 

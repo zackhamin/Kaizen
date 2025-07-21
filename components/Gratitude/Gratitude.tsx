@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -24,8 +23,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { StackScreen } from '../Layout/StackScreen';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 // Warrior Animation Component
 interface WarriorCompletionProps {
@@ -220,15 +217,7 @@ const Gratitude: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-
-        
         <View style={styles.content}>
-          <View style={styles.headerSection}>
-            <Text style={styles.title}>Daily Gratitude</Text>
-          </View>
-
-          {renderProgressBar()}
-
           {remainingSlots > 0 ? (
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>
@@ -379,11 +368,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 100,
-    width: '100%',
-    maxWidth: screenWidth,
+    width: '100%',    
   },
   headerSection: {
     marginBottom: 32,

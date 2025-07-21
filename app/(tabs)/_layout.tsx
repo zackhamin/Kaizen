@@ -16,7 +16,7 @@ export default function TabLayout() {
           tabBarActiveTintColor: colors.accent.copper,
           tabBarInactiveTintColor: colors.accent.steel,
           tabBarStyle: {  
-            height: Platform.OS === 'ios' ? 88 : 60,
+            height: Platform.OS === 'ios' ? 68 : 60,
             paddingBottom: Platform.OS === 'ios' ? 28 : 8,
             backgroundColor: colors.accent.charcoal,
             position: 'absolute',

@@ -51,20 +51,18 @@ export const dailyCheckinService = {
   // Upsert a daily check-in
   async upsertCheckin(values: Omit<DailyCheckin, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<DailyCheckin> {
     try {
-      console.log('dailyCheckinService: Upserting checkin:', values);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase.rpc('upsert_user_daily_checkin', {
-        p_user_id: user.id,
+        p_challenge_handling: values.challenge_handling ?? 0,
         p_checkin_date: values.checkin_date,
-        p_energy_level: values.energy_level,
-        p_challenge_handling: values.challenge_handling,
-        p_focus_level: values.focus_level
+        p_energy_level: values.energy_level ?? 0,
+        p_focus_level: values.focus_level ?? 0,
+        p_user_id: user.id,
       });
 
       if (error) throw error;
-      console.log('dailyCheckinService: Upserted checkin:', data);
       
       // Handle case where RPC returns an array instead of single object
       const checkin = Array.isArray(data) ? data[0] : data;
