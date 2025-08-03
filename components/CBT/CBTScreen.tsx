@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Modal,
   RefreshControl,
   StyleSheet,
   Text,
@@ -18,7 +17,6 @@ import { CBTChat } from './CBTChat';
 
 export function CBTScreen() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [moodBefore, setMoodBefore] = useState(5);
   
   // Use React Query hooks instead of local state
@@ -27,9 +25,8 @@ export function CBTScreen() {
 
   const startNewSession = async () => {
     try {
-      const conversation = await createConversationMutation.mutateAsync('New CBT Session');
+      const conversation = await createConversationMutation.mutateAsync('New Chat Session');
       setSelectedConversation(conversation.id);
-      setShowNewSessionModal(false);
       setMoodBefore(5);
     } catch (error) {
       console.error('Error starting session:', error);
@@ -74,15 +71,6 @@ export function CBTScreen() {
           {formatDate(item.created_at)}
         </Text>
       </View>
-      
-      <View style={styles.conversationMeta}>
-        <View style={styles.messageCountContainer}>
-          <Ionicons name="chatbubble-outline" size={16} color={colors.primary.light} />
-          <Text style={styles.messageCountText}>
-            {item.message_count || 0} messages
-          </Text>
-        </View>
-      </View>
     </TouchableOpacity>
   ), [handleConversationPress, formatDate]);
 
@@ -112,10 +100,10 @@ export function CBTScreen() {
     <GradientBackground showHeader={false}>
       {/* Header */}
       <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>CBT Sessions</Text>
+        <Text style={styles.headerTitle}>The Void</Text>
         <TouchableOpacity
           style={styles.addButtonInline}
-          onPress={() => setShowNewSessionModal(true)}
+          onPress={startNewSession}
           activeOpacity={0.7}
         >
           <Text style={styles.addButtonInlineText}>Add</Text>
@@ -128,11 +116,11 @@ export function CBTScreen() {
           <Ionicons name="chatbubbles-outline" size={64} color={colors.glass.text.placeholder} />
           <Text style={styles.emptyTitle}>No sessions yet</Text>
           <Text style={styles.emptySubtitle}>
-            Start your first CBT session to begin your mental health journey
+            This is your space to vent, share, and reason. This is your A.I. that won't judge.
           </Text>
           <TouchableOpacity
             style={styles.startFirstSessionButton}
-            onPress={() => setShowNewSessionModal(true)}
+            onPress={startNewSession}
             activeOpacity={0.8}
           >
             <Text style={styles.startFirstSessionText}>Start First Session</Text>
@@ -155,46 +143,6 @@ export function CBTScreen() {
           }
         />
       )}
-
-      {/* New Session Modal */}
-      <Modal
-        visible={showNewSessionModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <GradientBackground showHeader={false}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity
-                onPress={() => setShowNewSessionModal(false)}
-                style={styles.modalCloseButton}
-              >
-                <Ionicons name="close" size={24} color={colors.accent.white} />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Start New Session</Text>
-            </View>
-
-            <View style={styles.modalContent}>
-
-              <TouchableOpacity
-                style={[
-                  styles.startSessionButton,
-                  createConversationMutation.isPending && styles.startSessionButtonDisabled
-                ]}
-                onPress={startNewSession}
-                disabled={createConversationMutation.isPending}
-                activeOpacity={0.8}
-              >
-                {createConversationMutation.isPending ? (
-                  <ActivityIndicator size="small" color={colors.accent.white} />
-                ) : (
-                  <Text style={styles.startSessionText}>Start Session</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </GradientBackground>
-      </Modal>
     </GradientBackground>
   );
 }

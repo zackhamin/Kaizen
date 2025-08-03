@@ -111,7 +111,7 @@ export function CBTChat({ conversationId, onBack }: CBTChatProps) {
   }
 
   return (
-    <StackScreen title="CBT Session" onBack={onBack}>
+    <StackScreen title="The Void" onBack={onBack}>
       <KeyboardAvoidingView 
         style={styles.container} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -141,10 +141,7 @@ export function CBTChat({ conversationId, onBack }: CBTChatProps) {
                 color={colors.glass.text.placeholder} 
               />
               <Text style={styles.emptyMessagesText}>
-                Start your CBT session by typing a message below
-              </Text>
-              <Text style={styles.emptyMessagesSubtext}>
-                Share what's on your mind, and I'll help guide you through it
+                This is your space to vent, share, and reason. This is your A.I. that won't judge.
               </Text>
             </View>
           }

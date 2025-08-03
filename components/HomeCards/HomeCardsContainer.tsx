@@ -118,21 +118,12 @@ export const HomeCardsContainer: React.FC = () => {
       {selectedTab === 'challenges' && (
         <View style={styles.grid}>
           <View style={styles.row}>
-
             <HomeCard
               title="Coming soon"
               subtitle=""
               onPress={handleMoodPress}
               style={styles.card}
               disabled={true}
-            />
-          </View>
-          <View style={styles.row}>
-            <HomeCard
-              title="Brotherhood"
-              subtitle="Anonymous group chat"
-              onPress={handleGroupChatPress}
-              style={styles.card}
             />
             <HomeCard
               title="Coming soon"
@@ -153,7 +144,15 @@ export const HomeCardsContainer: React.FC = () => {
               onPress={handleVisionBoardPress}
               style={styles.card}
             />
+          <HomeCard
+              title="Brotherhood"
+              subtitle="Anonymous group chat"
+              onPress={handleGroupChatPress}
+              style={styles.card}
+            />
+            
           </View>
+          
         </View>
       )}
       {/* You can add a grid for 'challenges' here in the future */}
