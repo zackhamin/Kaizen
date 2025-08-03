@@ -71,7 +71,9 @@
     "react-native-screens": "~4.10.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "stream-chat": "^9.14.0",
+    "stream-chat-react-native": "^8.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -92,6 +94,8 @@
     "transformIgnorePatterns": [
       "node_modules/(?!(jest-)?react-native|@react-native|@react-navigation|expo(nent)?|@expo|@unimodules|unimodules|sentry-expo|native-base)"
     ],
-    "setupFilesAfterEnv": ["@testing-library/jest-native/extend-expect"]
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-native/extend-expect"
+    ]
   }
 }
