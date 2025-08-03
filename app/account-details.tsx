@@ -4,7 +4,7 @@ import { useCurrentUser, useSetAlias, useUpdateProfile } from '@/hooks/useUser';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AccountDetailsScreen() {
   const router = useRouter();
@@ -73,6 +73,14 @@ export default function AccountDetailsScreen() {
     setEditingField(null);
   };
 
+  const handleNotificationToggle = async (notificationType: string, value: boolean) => {
+    try {
+      await updateProfileMutation.mutateAsync({ [notificationType]: value });
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update notification settings');
+    }
+  };
+
   const renderEditableField = (field: string, label: string, value: string) => {
     const isEditing = editingField === field;
     const currentValue = editValues[field as keyof typeof editValues];
@@ -126,6 +134,28 @@ export default function AccountDetailsScreen() {
     );
   };
 
+  const renderNotificationSetting = (type: string, label: string, description: string) => {
+    const isEnabled = user?.[type as keyof typeof user] as boolean || false;
+    
+    return (
+      <View style={styles.section}>
+        <View style={styles.notificationHeader}>
+          <View style={styles.notificationInfo}>
+            <Text style={styles.sectionTitle}>{label}</Text>
+            <Text style={styles.notificationDescription}>{description}</Text>
+          </View>
+          <Switch
+            value={isEnabled}
+            onValueChange={(value) => handleNotificationToggle(type, value)}
+            trackColor={{ false: colors.glass.buttonDisabled, true: colors.accent.copper }}
+            thumbColor={isEnabled ? colors.accent.white : colors.glass.text.muted}
+            ios_backgroundColor={colors.glass.buttonDisabled}
+          />
+        </View>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return (
       <StackScreen title="Account Details">
@@ -148,19 +178,24 @@ export default function AccountDetailsScreen() {
 
   return (
     <StackScreen title="Account Details">
-      <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Account Details Card */}
         <View style={styles.detailsCard}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Name</Text>
+            <Text style={styles.displayValue}>{user.full_name}</Text>
+          </View>
 
+          <View style={styles.divider} />
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Email</Text>
             <Text style={styles.displayValue}>{user.email}</Text>
           </View>
-
-          <View style={styles.divider} />
-
-          {renderEditableField('full_name', 'Full Name', user.full_name || '')}
 
           <View style={styles.divider} />
 
@@ -176,14 +211,50 @@ export default function AccountDetailsScreen() {
             </>
           )}
         </View>
-      </View>
+
+        {/* Notification Preferences Card - Always show this */}
+        <View style={styles.notificationsCard}>
+          <Text style={styles.cardTitle}>Notification Preferences</Text>
+          
+          {renderNotificationSetting(
+            'morning_notifications',
+            'Morning Check-ins',
+            'Daily morning reminders for your goals'
+          )}
+          
+          <View style={styles.divider} />
+          
+          {renderNotificationSetting(
+            'evening_notifications',
+            'Evening Reflections',
+            'Evening prompts to reflect on your day and set intentions'
+          )}
+          
+          <View style={styles.divider} />
+          
+          {renderNotificationSetting(
+            'weekly_summary_notifications',
+            'Weekly Summary',
+            'Weekly progress summary and insights from your journey'
+          )}
+        </View>
+      </ScrollView>
     </StackScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.lg,
+    gap: theme.spacing.lg,
+  },
   container: {
     flex: 1,
+    gap: theme.spacing.lg,
   },
   header: {
     flexDirection: 'row',
@@ -203,8 +274,27 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  section: {
+  notificationsCard: {
+    backgroundColor: colors.glass.overlay,
+    borderRadius: theme.borderRadius.large,
+    paddingVertical: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.glass.overlayBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.glass.text.primary,
+    marginBottom: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
+  },
+  section: {
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
   },
   sectionTitle: {
@@ -214,6 +304,20 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  notificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  notificationInfo: {
+    flex: 1,
+    marginRight: theme.spacing.md,
+  },
+  notificationDescription: {
+    fontSize: 13,
+    color: colors.glass.text.muted,
+    marginTop: theme.spacing.xs,
   },
   displayContainer: {
     flexDirection: 'row',

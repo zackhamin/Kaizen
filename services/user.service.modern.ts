@@ -10,6 +10,9 @@ export interface UserProfile {
   bio?: string;
   avatar_url?: string;
   alias?: string;
+  morning_notifications?: boolean;
+  evening_notifications?: boolean;
+  weekly_summary_notifications?: boolean;
   created_at: string;
   updated_at: string;
 }
