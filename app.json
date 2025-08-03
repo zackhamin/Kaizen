@@ -6,6 +6,10 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "Kaizen",
+    "icon": {
+      "light": "./assets/icon-light.png",
+      "dark": "./assets/icon-dark.png"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hya.kaizen",
@@ -14,8 +18,8 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "icon": {
-        "light": "./assets/images/icon-light.png",
-        "dark": "./assets/images/icon-dark.png"
+        "light": "./assets/icon-light.png",
+        "dark": "./assets/icon-dark.png"
       }
     },
     "android": {

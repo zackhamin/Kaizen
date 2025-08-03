@@ -195,16 +195,17 @@ Remember: You're here to support and guide, not to diagnose or replace professio
           temperature: 0.7
         })
       });
-
+      console.log('response', response);
       if (!response.ok) {
         throw new Error(`OpenAI API error: ${response.status}`);
       }
-
+      console.log('response', response);
       const data = await response.json();
       const aiResponse = data.choices[0]?.message?.content || 'I apologize, but I\'m having trouble responding right now. Please try again.';
       
       return aiResponse;
     } catch (error) {
+      console.log('error', error);
       console.error('CBTService.getAIResponse:', error);
       
       // If ChatGPT fails, provide a fallback response

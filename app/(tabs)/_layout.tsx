@@ -100,9 +100,9 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
-          name="cbt"
+          name="void"
           options={{
-            title: 'CBT',
+            title: 'Void',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="chatbubbles" size={size} color={color} />
             ),
