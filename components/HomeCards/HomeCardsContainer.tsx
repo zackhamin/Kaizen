@@ -37,7 +37,7 @@ export const HomeCardsContainer: React.FC = () => {
   };
 
   const handleGroupChatPress = () => {
-    router.push('/communities');
+    router.push('/forum');
   };
 
   const handleVisionBoardPress = () => {
